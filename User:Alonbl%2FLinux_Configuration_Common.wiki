@@ -1,0 +1,173 @@
+= Alonbl's base kernel configuration =
+
+Following is basic kernel configuration I use for all my computer.
+
+I try to make the kernel configuration as smaller as I can, trying to make sure I understand why I add an feature.
+
+I also try to use modules as much as I can to see dependency and be able to see references.
+
+== Kernel ==
+
+{{Kernel||<pre>
+  General setup  --->
+    [*] Prompt for development and/or incomplete code/drivers
+    [*] Support for paging of anonymous memory (swap)
+    [*] Initial RAM filesystem and RAM disk (initramfs/initrd) support
+    [*] System V IPC                                                  ### apache
+    -*- Export task/process statistics through netlink (EXPERIMENTAL) ### iotop
+    -*-   Enable per-task delay accounting (EXPERIMENTAL)             ### iotop
+    [*]   Enable extended accounting over taskstats (EXPERIMENTAL)    ### iotop
+    [*]     Enable per-task storage I/O accounting (EXPERIMENTAL)     ### iotop
+  [*] Enable loadable module support  --->
+    [*]   Module unloading
+    [*]   Module versioning support
+  -*- Enable the block layer  --->
+    [*]   Block layer SG support v4
+  [*] Enable loadable module support  --->
+    [*]   Module unloading
+    [*]   Module versioning support
+  IO Schedulers  --->
+    <M> CFQ I/O scheduler
+    [*]   CFQ Group Scheduling support
+    Default I/O scheduler (No-op)  --->
+  Processor type and features  --->
+    [*] Tickless System (Dynamic Ticks)
+    [*] High Resolution Timer Support                                  ### Workstation
+    [*] Symmetric multi-processing support
+    [*] Single-depth WCHAN output
+    (2) Maximum number of CPUs                                         ### Update to match machine
+    [*] Multi-core scheduler support
+    [*] Machine Check / overheating reporting
+    [*]   Intel MCE features
+    [*] Sparse Memory virtual memmap
+  Power management and ACPI options  --->
+    [*] ACPI (Advanced Configuration and Power Interface) Support  --->
+      -*-   Button
+    CPU Frequency scaling  --->
+      [*] CPU Frequency scaling
+      <M>   CPU frequency translation statistics
+      [*]     CPU frequency translation statistics details
+      Default CPUFreq governor (performance)  --->
+      x86 CPU frequency scaling drivers  --->
+        <M> ACPI Processor P-States drivers
+    -*- CPU idle PM support
+    [*]   Cpuidle Driver for Intel Processors
+  Bus options (PCI etc.)  --->
+    [*] PCI support
+    [*]   Support mmconfig PCI config space access
+    [*]   PCI Express support
+    [*] Message Signaled Interrupts (MSI and MSI-X)
+    [*] Interrupts on hypertransport devices
+  Executable file formats / Emulations  --->
+    [*] Kernel support for ELF binaries
+  [*] Networking support  --->
+    Networking options  --->
+      <M> Packet socket
+      <M> Unix domain sockets
+      [*] TCP/IP networking
+      [*]   IP: TCP syncookie support
+      <M>   Large Receive Offload (ipv4/tcp)
+      <M>   INET: socket monitoring interface
+      [*]   TCP: advanced congestion control  --->
+        <*>   CUBIC TCP
+        Default TCP congestion control (Cubic)  --->
+      [*] Security Marking 
+  Device Drivers  --->
+    Generic Driver Options  --->
+      [*] Select only drivers that don't need compile-time external firmware
+      [*] Prevent firmware from being built
+      -*- Userspace firmware loading support
+    <*> Connector - unified userspace <-> kernelspace linker  --->
+      [*]   Report process events to userspace
+    Input device support  --->
+      <M>   Event interface
+      [*]   Miscellaneous devices  --->
+      -*-   Keyboards  --->
+      [*]   Mice  --->
+        <M>   PS/2 mouse 
+      [*]   Miscellaneous devices  --->
+        <M>   PC Speaker support
+    Character devices  --->
+      [*] HPET - High Precision Event Timer
+      [*]   Allow mmap of HPET
+    [*] USB support  --->
+      <M>   Support for Host-side USB
+      [*]     USB runtime power management (autosuspend) and wakeup
+      <M>   USB Monitoring
+      <M>   EHCI HCD (USB 2.0) support
+      <M>   OHCI HCD support
+      <M>   UHCI HCD (most Intel and VIA) support
+      <M>   USB Mass Storage support
+    [*] Real Time Clock  --->
+      [*]   Set system time from RTC on startup and resume
+      (rtc0)  RTC used to set the system time
+      [*]   /sys/class/rtc/rtcN (sysfs)
+      [*]   /dev/rtcN (character devices)
+      <M>   PC-style 'CMOS'
+    [*] DMA Engine support  --->
+      <M>   Intel I/OAT DMA support
+      [*]   Network: TCP receive copy offload
+    [*] IOMMU Hardware Support  --->
+      [*]   Support for DMA Remapping Devices
+      [*]     Enable DMA Remapping Devices by default
+      [*]   Support for Interrupt Remapping (EXPERIMENTAL)
+    File systems  --->
+      <M> The Extended 4 (ext4) filesystem                       ### you may  want to set as <*> to avoid complex initramfs
+      [*]   Use ext4 for ext2/ext3 file systems
+      [*]   Ext4 extended attributes
+      [*]     Ext4 POSIX Access Control Lists
+      [*]     Ext4 Security Labels
+      [*] Inotify support for userspace
+      Pseudo filesystems  --->
+        [*]   Tmpfs POSIX Access Control Lists
+        -*-   Tmpfs extended attributes
+  Kernel hacking  --->
+    [*] Kernel debugging                                          ### powertop
+    [*] Collect kernel timers statistics                          ### powertop
+    [*] Tracers  --->                                             ### powertop
+      [*]   Trace process context switches and events             ### powertop
+    [*] Write protect kernel read-only data structures
+</pre>}}
+
+Also apply [[Firewall_Using_Firehol]] kernel configuration.
+
+OpenRC cgroup integration:
+
+{{Kernel||<pre>
+  General setup  --->
+    [*] Control Group support  --->
+      [*]   Freezer cgroup subsystem
+      [*]   Device controller for cgroups
+      [*]   Cpuset support
+      [*]   Simple CPU accounting cgroup subsystem
+      [*]   Group CPU scheduler  --->
+        [*]   Group scheduling for SCHED_OTHER
+        [*]   Group scheduling for SCHED_RR/FIFO
+      <M>   Block IO controller
+  IO Schedulers  --->
+    <M> CFQ I/O scheduler
+    [*]   CFQ Group Scheduling support
+</pre>}}
+
+{{File|/etc/conf.d/modules|<pre>
+modules="${modules}
+af-packet
+"
+modules="${modules}
+inet_lro
+ioatdma
+cfq-iosched
+"
+</pre>}}
+
+{{File|/etc/local.d/iosched.start|<pre>
+#!/bin/sh
+find /sys/class/block/*/. -name scheduler | while read f; do echo cfq > "$f"; done
+exit 0
+</pre>}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-25|type=original}}}}

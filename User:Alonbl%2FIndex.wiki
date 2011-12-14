@@ -1,0 +1,71 @@
+== Maintain ==
+
+=== Administrative ===
+
+* {{User:Alonbl/WikiBackup|User:Alonbl}}
+* {{User:Alonbl/WikiBackup|User:Alonbl/Index}}
+
+=== Hardware ===
+
+* {{User:Alonbl/WikiBackup|User:Alonbl/Linux_Configuration_Common}}
+* {{User:Alonbl/WikiBackup|User:Alonbl/Thinkpad_Common}}
+* {{User:Alonbl/WikiBackup|User:Alonbl/Linux_Configuration_Thinkpad_W500}}
+* {{User:Alonbl/WikiBackup|User:Alonbl/Linux_Configuration_Dell_E6410}}
+* {{User:Alonbl/WikiBackup|User:Alonbl/Linux_Configuration_ASRock_Core_100HT}}
+* {{User:Alonbl/WikiBackup|User:Alonbl/Configuration_Workstation}}
+* {{User:Alonbl/WikiBackup|User:Alonbl/Configuration_Server}}
+* {{User:Alonbl/WikiBackup|User:Alonbl/Configuration_HTPC_ASRock_Core_100HT}}
+* {{User:Alonbl/WikiBackup|User:Alonbl/Intel_Integrated_Graphics_Controller}}
+* {{User:Alonbl/WikiBackup|USB_Power_Saving}}
+* {{User:Alonbl/WikiBackup|Lenovo_UVC_Camera}}
+* {{User:Alonbl/WikiBackup|ATT_USB_GSM_Modem}}
+* {{User:Alonbl/WikiBackup|ZTE_USB_GSM_Modem}}
+* {{User:Alonbl/WikiBackup|Bluetooth}}
+* {{User:Alonbl/WikiBackup|Bluetooth_Modem}}
+* {{User:Alonbl/WikiBackup|Sony_DualShock3_SixAxis}}
+
+=== Security ===
+
+* {{User:Alonbl/WikiBackup|MIT_Kerberos_Windows_Domain}}
+* {{User:Alonbl/WikiBackup|Secured_Portage_Sync}}
+* {{User:Alonbl/WikiBackup|Linux_Disk_Encryption_Using_LoopAES_And_SmartCards}}
+* {{User:Alonbl/WikiBackup|CIFS_Kerberos}}
+* {{User:Alonbl/WikiBackup|Suspend_To_Disk_Using_uswsusp_and_genkernel}}
+
+=== Networking ===
+
+* {{User:Alonbl/WikiBackup|openresolv}}
+* {{User:Alonbl/WikiBackup|Stealth_DHCP}}
+* {{User:Alonbl/WikiBackup|Firewall_Using_Firehol}}
+* {{User:Alonbl/WikiBackup|OpenVPN_Server}}
+* {{User:Alonbl/WikiBackup|OpenVPN_Non_Root}}
+* {{User:Alonbl/WikiBackup|VM_Tap_Networking}}
+* {{User:Alonbl/WikiBackup|PPP_Client}}
+* {{User:Alonbl/WikiBackup|PPPoE_Client}}
+
+=== Software ===
+
+* {{User:Alonbl/WikiBackup|User:Alonbl/Gentoo_Bootstrap}}
+* {{User:Alonbl/WikiBackup|User:Alonbl/Gentoo_Configuration_Common}}
+* {{User:Alonbl/WikiBackup|Syslinux_Bootloader}}
+* {{User:Alonbl/WikiBackup|Java_Using_IcedTea}}
+* {{User:Alonbl/WikiBackup|Bugzilla_Email}}
+* {{User:Alonbl/WikiBackup|Bugzilla_Kerberos}}
+
+=== Localization ===
+
+* {{User:Alonbl/WikiBackup|Hebrew}}
+
+== Contribute/Monitor ==
+
+* {{User:Alonbl/WikiBackup|Lenovo_ThinkPad_T400}}
+* {{User:Alonbl/WikiBackup|Fbsplash}}
+* {{User:Alonbl/WikiBackup|Iwlwifi}}
+* {{User:Alonbl/WikiBackup|Userspace_software_suspend}}
+* {{User:Alonbl/WikiBackup|Git}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}

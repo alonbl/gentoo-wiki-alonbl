@@ -1,0 +1,241 @@
+= Firehol =
+
+{{Package|net-firewall/firehol}} is a dream firewall to anyone with network experience, as it is very similar
+to command prompt of Cisco etc.
+
+It is iptables wrapper and front-end, no extra daemons or loads.
+
+I use it desktop, servers, gateways.
+
+== Manage ==
+
+=== Kernel ===
+
+{{Kernel|Netfilters|<pre>
+  [*] Networking support  ---> 
+    Networking options  --->
+      [*]   IP: TCP syncookie support
+      [*] Network packet filtering framework (Netfilter)  --->
+        [*]   Advanced netfilter configuration
+          Core Netfilter Configuration  --->
+            <M> For all none experimental
+          IP: Netfilter Configuration  --->
+            <M> For all none experimental none obsolete
+</pre>}}
+
+Optional, set the following:
+{{File|/etc/sysctl.conf|<pre>
+net.ipv4.tcp_syncookies = 1
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+</pre>}}
+
+Even more secured, for gateways, Set the following:
+{{File|/etc/sysctl.conf|<pre>
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.secure_redirects = 0
+net.ipv4.conf.default.secure_redirects = 0
+</pre>}}
+
+=== Setup ===
+
+{{Root|emerge net-firewall/firehol}}
+{{Root|rc-update add firehol default}}
+{{Root|/etc/init.d/firehol start}}
+
+For each interface add:
+{{File|/etc/conf.d/net|<pre>
+rc_need_eth0="firewall"
+</pre>}}
+
+=== Reload ===
+
+{{Root|/etc/init.d/firehol save}}
+
+=== Files ===
+
+Configuration
+ /etc/firehol/firehol.conf
+
+Services
+ /etc/firehol/services/*.conf
+
+== Simple Desktop ==
+
+The following rules allow only outgoing communications:
+{{File|/etc/firehol/firehol.conf|<pre>
+version 5
+
+interface any world
+        policy  reject
+        protection              strong  10/sec  10
+        server  ident           reject  with tcp-reset
+
+        client  all             accept
+</pre>}}
+
+== Complex Desktop ==
+
+The following example enables the following:
+* Access public Internet via eth* wlan* ppp* interfaces outgoing communications only.
+* Access of interfaces br0 (VMs, see [[VM_Tap_Networking]]), usb0, pan0 which are a mobile device with access to incoming communcations.
+* Access of interface vpn0 (OpenVPN, see [[OpenVPN_Non_Root]]) communications only to VPN host.
+* NAT between br0 (VMs, see [[VM_Tap_Networking]]) and usb0 to the Internet, to allow Internet access to these nodes.
+* Standard rules includes Microsoft Domain integration and dropping Microsoft broadcasts.
+
+{{File|/etc/firehol/firehol.conf|<pre>
+version 5
+
+my_standard_inet() {
+        server  all             drop    dst     "10.10.50.255"
+        server  all             drop    dst     "255.255.255.255"
+        client  all             drop    dst     "228.67.43.91"  #rtsp something
+        server  all             drop    dst     "228.67.43.91"  #rtsp something
+        client  all             drop    dst     "224.0.0.1"     #igmp something
+        server  all             drop    dst     "224.0.0.1"     #igmp something
+#       client  netbios_dgm     drop
+#       client  netbios_ns      drop
+        server  netbios_dgm     drop
+        server  netbios_ns      drop
+        server  time            drop
+
+        client  dhcp            accept
+        client  cups            accept
+        client  http            accept
+        client  https           accept
+        client  ftp             accept
+        client  dns             accept
+        client  icmp            accept
+        client  imap            accept
+        client  smtp            accept
+        client  pop3            accept
+        client  ssh             accept
+        client  nntp            accept
+        client  rdp             accept
+        client  samba           accept
+        client  telnet          accept
+        client  ping            accept
+        client  svn             accept
+        client  git             accept
+        client  cvspserver      accept
+        client  ldap            accept
+        client  ntp             accept
+        client  krb             accept
+        client  microsoft_ds    accept
+
+        #gmail
+        client  gmailsmtp       accept
+        client  gmailimap       accept
+        client  gmailpop3       accept
+
+interface "eth+ wlan+ ppp+" inet1
+        policy  reject
+        protection              strong  10/sec  10
+        server  ident           reject  with tcp-reset
+
+        my_standard_inet
+
+interface "br0 usb0 pan0" local1
+        policy  reject
+        protection              strong  10/sec  10
+        server  ident           reject  with tcp-reset
+
+        #standard
+        my_standard_inet
+
+        server  samba           accept
+        server  ssh             accept
+        server  dns             accept
+        server  http            accept
+
+interface "vpn0" vpn1
+        policy  reject
+        protection              strong  10/sec  10
+        server  ident           reject  with tcp-reset
+
+        #standard
+        my_standard_inet
+
+router tun_nat  inface "eth+ wlan+ ppp+ vpn0" outface "br0 usb0"
+        route   ident           reject with tcp-reset
+        server  ident           reject with tcp-reset
+        masquerade              reverse
+
+        #standard
+        my_standard_inet
+</pre>}}
+
+{{File|/etc/firehol/services/git.conf|<pre>
+#FHVER: 1:213
+server_git_ports="tcp/9418"
+client_git_ports="default"
+</pre>}}
+
+{{File|/etc/firehol/services/gmail.conf|<pre>
+#FHVER: 1:213
+server_gmailsmtp_ports="tcp/587 tcp/465"
+client_gmailsmtp_ports="default"
+server_gmailpop3_ports="tcp/995"
+client_gmailpop3_ports="default"
+server_gmailimap_ports="tcp/993"
+client_gmailimap_ports="default"
+</pre>}}
+
+{{File|/etc/firehol/services/svn.conf|<pre>
+#FHVER: 1:213
+server_svn_ports="tcp/3690"
+client_svn_ports="default"
+</pre>}}
+
+{{File|/etc/firehol/services/krb.conf|<pre>
+#FHVER: 1:213
+server_krb_ports="tcp/88 udp/88 udp/464 tcp/749 tcp/750"
+client_krb_ports="default"
+</pre>}}
+
+== NAT Gateway ==
+
+Simple NAT Gateway configuration, allows any outgoing connection.
+{{Codeline|<pre>
+  Internet <--->(eth0)--NAT--Gatway(eth1) <---> Internal
+</pre>}}
+
+{{File|/etc/firehol/firehol.conf|<pre>
+version 5
+
+interface "eth0" world
+        policy  reject
+        protection              strong  10/sec  10
+        server  ident           reject  with tcp-reset
+
+        client  all             accept
+
+interface "eth1" internal
+        policy  reject
+        protection              strong  10/sec  10
+        server  ident           reject  with tcp-reset
+
+        client  all             accept
+
+router tun_nat  inface "eth0" outface "eth1"
+        route   ident           reject with tcp-reset
+        server  ident           reject with tcp-reset
+        masquerade              reverse
+
+        client  all             accept
+</pre>}}
+
+== OpenVPN Server ==
+
+See [[OpenVPN_Server]].
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}
+
+[[Category:Security]]
+[[Category:Network]]

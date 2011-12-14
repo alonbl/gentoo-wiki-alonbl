@@ -1,0 +1,225 @@
+= OpenVPN Server =
+
+{{Package|net-misc/openvpn}} network Configuration:
+{{Codeline|<pre>
+  Internet <---> Router <---> (eth0, 192.168.253.253/24)Gateway(eth1, 10.10.50.253/21) <---> Internet Network (10.10.48.0/21)
+</pre>}}
+
+Minimal server, with simple hardening.
+
+This page is provided as OEM, a complete setup.
+
+== Installation ==
+
+{{Kernel|Add tap|<pre>
+  Device Drivers  ---> 
+    [*] Network device support  --->
+      <M>   Universal TUN/TAP device driver support
+</pre>}}
+
+{{File|/etc/make.conf|<pre>
+CFLAGS="-O2 -pipe -mtune=native -fomit-frame-pointer -pipe"
+CXXFLAGS="${CFLAGS}"
+MAKEOPTS="-j4"
+CHOST="x86_64-pc-linux-gnu"
+PORTDIR="/var/gentoo/portage"
+DISTDIR="/var/gentoo/distfiles"
+PKGDIR="/var/gentoo/packages"
+PORTAGE_GPG_DIR="/etc/portage/gnupg"
+FEATURES="webrsync-gpg parallel-fetch userfetch userpriv usersandbox"
+ACCEPT_LICENSE="-* @FSF-APPROVED @FSF-APPROVED-OTHER freedist"
+
+USE="${USE} mmx sse sse2 sse3 caps fam"
+USE="${USE} logrotate"
+USE="${USE} -gnome -qt3 -X"
+USE="${USE} -ruby -perl -fortran -python -lua -java"
+USE="${USE} -berkdb -gdbm -hal"
+</pre>}}
+
+{{Note|Refer to [[Secured_Portage_Sync]] for sync setup}}
+
+{{File|/etc/portage/package.license/base.conf|<pre>
+sys-devel/flex FLEX
+app-arch/bzip2 BZIP2
+sys-libs/cracklib CRACKLIB
+sys-process/lsof lsof
+dev-perl/Crypt-PasswdMD5 BEER-WARE
+sys-apps/debianutils SMAIL
+sys-apps/tcp-wrappers tcp_wrappers_license
+sys-apps/man-pages-posix man-pages-posix
+</pre>}}
+
+{{File|/etc/portage/package.use/openvpn.conf|<pre>
+net-misc/openvpn iproute2
+</pre>}}
+
+Modify:
+{{File|/etc/rc.conf|<pre>
+rc_hotplug="*"
+</pre>}}
+
+{{File|/var/lib/portage/world|<pre>
+app-admin/logrotate
+app-admin/syslog-ng
+app-arch/tarsync
+app-crypt/gnupg
+app-editors/vim
+app-portage/gentoolkit
+net-dns/openresolv
+net-misc/dhcpcd
+net-misc/ntp
+sys-apps/ifplugd
+sys-kernel/genkernel
+sys-kernel/gentoo-sources
+sys-process/vixie-cron
+</pre>}}
+
+{{Root|emerge net-misc/openvpn}}
+
+Firehol installation see [[Firewall_Using_Firehol]].
+
+== Cryptographic configuration ==
+
+TODO
+
+== Network Configuration ==
+
+{{File|/etc/firehol/firehol.conf|<pre>
+version 5
+
+interface eth0 internal
+        policy  reject
+        protection              strong  10/sec  10
+        server  ident           reject  with tcp-reset
+
+        server  all             drop    dst     "10.10.50.255"
+        server  all             drop    dst     "255.255.255.255"
+        client  all             drop    dst     "228.67.43.91"  #rtsp something
+        server  all             drop    dst     "228.67.43.91"  #rtsp something
+        client  all             drop    dst     "224.0.0.1"     #igmp something
+        server  all             drop    dst     "224.0.0.1"     #igmp something
+
+        server  netbios_dgm     drop
+        server  netbios_ns      drop
+        server  time            drop
+
+        server  ssh             accept
+        server  snmp            accept
+        client  ssh             accept
+        client  dns             accept
+        client  ntp             accept
+        client  http            accept
+        client  https           accept
+
+interface eth1 external
+        policy  reject
+        protection              strong  10/sec  10
+        server  ident           reject  with tcp-reset
+
+        server  netbios_dgm     drop
+        server  netbios_ns      drop
+        server  time            drop
+
+        server  https           accept
+        client  http            accept
+        client  https           accept
+        client  smtp            accept
+
+interface vpn0 vpn
+        policy  reject
+        protection              strong  10/sec  10
+        server  ident           reject  with tcp-reset
+
+        server  ssh             accept
+
+router vpn_nat inface eth0 outface vpn0
+        route   ident           reject with tcp-reset
+        server  ident           reject with tcp-reset
+        masquerade              reverse
+
+        client  all             accept
+</pre>}}
+
+{{File|/etc/conf.d/net|<pre>
+dns_domain="mydomain.com"
+dns_search="mydomain.com"
+
+rc_need_eth0="firewall"
+config_eth0="10.10.50.253/21"
+dns_servers_eth0="10.10.50.2 10.10.50.39"
+
+rc_need_eth1="firewall"
+config_eth1="192.168.253.253/24"
+routes_eth1="default via 192.168.253.254"
+
+rc_need_vpn0="firewall"
+rc_provide_vpn0="!net"
+tuntap_vpn0="tun"
+config_vpn0="null"
+txqueuelen_vpn0="100"
+metric_vpn0="1"
+</pre>}}
+
+{{Root|ln -s net.lo /etc/init.d/net.vpn0}}
+
+== OpenVPN Configuration ==
+
+{{Root|ln -s openvpn /etc/init.d/openvpn.vpn0}}
+
+{{File|/etc/conf.d/openvpn.vpn0|<pre>
+rc_need="net.vpn0 net.eth1"
+</pre>}}
+
+Add:
+{{File|/etc/openvpn/vpn0.conf|<pre>
+dev vpn0
+dev-type tun
+user nobody
+group nobody
+persist-key
+persist-tun
+</pre>}}
+
+Example:
+{{File|/etc/openvpn/vpn0.conf|<pre>
+dev vpn0
+dev-type tun
+proto tcp-server
+tls-cipher DHE-RSA-AES256-SHA
+cipher AES-256-CBC
+server 192.168.252.0 255.255.255.0
+local 192.168.253.253
+lport 443
+comp-lzo
+
+user nobody
+group nobody
+persist-key
+persist-tun
+chroot /var/openvpn
+
+keepalive 60 120
+
+ca ca.crt
+cert server.crt
+key server.key
+dh dh4096.pem
+
+crl-verify /crl.pem # after chroot
+
+push "route 10.10.48.0 255.255.248.0"
+push "dhcp-option DOMAIN mydomain.com"
+push "dhcp-option DNS 10.10.50.2"
+push "dhcp-option DNS 10.10.50.39"
+</pre>}}
+
+{{Note|As OpenVPN runs under nobody, it cannot clear the vpn0 interface when it goes down, /etc/init.d/net.vpn0 restart is required}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-16|type=original}}}}
+
+[[Category:Security]]
+[[Category:Network]]

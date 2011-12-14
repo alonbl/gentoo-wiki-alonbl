@@ -1,0 +1,182 @@
+= Alonbl's ASRock Core 100HT =
+
+Following is extension to [[User:Alonbl/Linux_Configuration_Common]] with ASRock Core 100HT configuration.
+
+Same guidelines of minimal module only configuration.
+
+[[Image:ASRock_Core_100HT.jpg|200px]]
+
+== Hardware ==
+
+=== PCI ===
+
+{{Codeline|<pre>
+00:00.0 Host bridge [0600]: Intel Corporation Core Processor DRAM Controller [8086:0044] (rev 12)
+00:02.0 VGA compatible controller [0300]: Intel Corporation Core Processor Integrated Graphics Controller [8086:0046] (rev 12)
+00:04.0 Signal processing controller [1180]: Intel Corporation Core Processor Thermal Management Controller [8086:0050] (rev 12)
+00:16.0 Communication controller [0780]: Intel Corporation 5 Series/3400 Series Chipset HECI Controller [8086:3b64] (rev 06)
+00:1a.0 USB Controller [0c03]: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller [8086:3b3c] (rev 06)
+00:1b.0 Audio device [0403]: Intel Corporation 5 Series/3400 Series Chipset High Definition Audio [8086:3b56] (rev 06)
+00:1c.0 PCI bridge [0604]: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 1 [8086:3b42] (rev 06)
+00:1c.1 PCI bridge [0604]: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 2 [8086:3b44] (rev 06)
+00:1d.0 USB Controller [0c03]: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller [8086:3b34] (rev 06)
+00:1e.0 PCI bridge [0604]: Intel Corporation 82801 Mobile PCI Bridge [8086:2448] (rev a6)
+00:1f.0 ISA bridge [0601]: Intel Corporation Mobile 5 Series Chipset LPC Interface Controller [8086:3b09] (rev 06)
+00:1f.2 SATA controller [0106]: Intel Corporation 5 Series/3400 Series Chipset 4 port SATA AHCI Controller [8086:3b29] (rev 06)
+00:1f.3 SMBus [0c05]: Intel Corporation 5 Series/3400 Series Chipset SMBus Controller [8086:3b30] (rev 06)
+00:1f.6 Signal processing controller [1180]: Intel Corporation 5 Series/3400 Series Chipset Thermal Subsystem [8086:3b32] (rev 06)
+01:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller [10ec:8168] (rev 06)
+02:00.0 USB Controller [0c03]: NEC Corporation Device [1033:0194] (rev 03)
+ff:00.0 Host bridge [0600]: Intel Corporation Core Processor QuickPath Architecture Generic Non-core Registers [8086:2c62] (rev 02)
+ff:00.1 Host bridge [0600]: Intel Corporation Core Processor QuickPath Architecture System Address Decoder [8086:2d01] (rev 02)
+ff:02.0 Host bridge [0600]: Intel Corporation Core Processor QPI Link 0 [8086:2d10] (rev 02)
+ff:02.1 Host bridge [0600]: Intel Corporation Core Processor QPI Physical 0 [8086:2d11] (rev 02)
+ff:02.2 Host bridge [0600]: Intel Corporation Core Processor Reserved [8086:2d12] (rev 02)
+ff:02.3 Host bridge [0600]: Intel Corporation Core Processor Reserved [8086:2d13] (rev 02)
+</pre>}}
+
+=== USB ===
+
+{{Codeline|<pre>
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 001 Device 002: ID 8087:0020 Intel Corp. Integrated Rate Matching Hub
+Bus 002 Device 002: ID 8087:0020 Intel Corp. Integrated Rate Matching Hub
+Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+</pre>}}
+
+== BIOS ==
+
+* Use only Intel integrated video controller, it saves power, and Intel have better support for Linux.
+* Use AHCI SATA not compatible mode.
+
+== Kernel ==
+
+{{Kernel||<pre>
+  Processor type and features  --->
+    (4) Maximum number of CPUs
+    [*] Enable KSM for page merging
+    (64) Amount of low memory, in kilobytes, to reserve for the BIOS
+    -*- MTRR (Memory Type Range Register) support
+    [*]   MTRR cleanup support
+    (1)     MTRR cleanup enable value (0-1)
+    (0)     MTRR cleanup spare reg num (0-7)
+  Power management and ACPI options  --->
+    [*] Suspend to RAM and standby
+    [*] Hibernation (aka 'suspend to disk')
+    [*] Run-time PM core functionality
+    [*] ACPI (Advanced Configuration and Power Interface) Support  --->
+      <M>   AC Adapter
+      -*-   Button
+      -*-   Video
+      <M>   Fan
+      <M>   Processor
+      <M>   Thermal Zone
+    CPU Frequency scaling  --->
+      [*] CPU Frequency scaling
+      <M>   CPU frequency translation statistics
+      [*]     CPU frequency translation statistics details
+      Default CPUFreq governor (performance)  --->
+      -*-   'performance' governor
+      <M>   'powersave' governor
+      <M>   'userspace' governor for userspace frequency scaling
+      <M>   'ondemand' cpufreq policy governor
+      <M>   'conservative' cpufreq governor
+      x86 CPU frequency scaling drivers  --->
+        <M> ACPI Processor P-States drivers
+    -*- CPU idle PM support
+    [*]   Cpuidle Driver for Intel Processors
+  [*] Networking support  --->
+    -*-   Wireless  --->
+      <M>   cfg80211 - wireless configuration API
+      [*]     enable powersave by default
+      [*]     cfg80211 wireless extensions compatibility
+      [*]   Wireless extensions sysfs files
+      <M>   Common routines for IEEE802.11 drivers
+      <M>   Generic IEEE 802.11 Networking Stack (mac80211)
+    <M>   RF switch subsystem support  --->
+  Device Drivers  --->
+    [*] Block devices  ---> 
+      <M>   Packet writing on CD/DVD media
+      (8)     Free buffers for data gathering
+      [*]     Enable write caching (EXPERIMENTAL)
+      <M> Serial ATA and Parallel ATA drivers  --->
+        [*]   ATA ACPI Support
+        <M>   AHCI SATA support                                             ### you may  want to set as <*> to avoid complex initramfs
+    [*] Network device support  --->
+      [*]   Ethernet (1000 Mbit)  --->
+        <M>   Realtek 8169 gigabit ethernet support
+      [*]   Wireless LAN  --->
+        <M>   Atheros Wireless Cards  --->
+          <M>   Atheros 802.11n wireless cards support
+          [*]     Atheros ath9k PCI/PCIe bus support
+          [*]     Atheros ath9k rate control (NEW)
+    {M} Hardware Monitoring support  --->
+      <M>   Intel Core/Core2/Atom temperature sensor
+    <M> Sound card support  --->
+      <M>   Advanced Linux Sound Architecture  --->
+        <M>   Sequencer support
+        [*]   PCI sound devices  --->
+          <M>   Intel HD Audio  --->
+            (64)  Pre-allocated buffer size for HD-audio drivers
+            [*]   Support digital beep via input layer
+            (1)     Digital beep registration mode (0=off, 1=on, 2=mute sw on/off)
+            [*]   Support jack plugging notification via input layer
+            [*]   Build VIA HD-audio codec support
+            [*]   Aggressive power-saving on HD-audio
+            (30)    Default time-out for HD-audio power-save modesetting
+    [*] HID Devices  --->
+      <*>   USB Human Interface Device (full HID) support
+    [*] USB support  --->
+      <M>   xHCI HCD (USB 3.0) support (EXPERIMENTAL)       ### addition to basic
+</pre>}}
+
+{{File|/etc/conf.d/modules|<pre>
+modules="${modules}
+ac
+fan
+processor
+thermal
+coretemp
+"modules="${modules}
+acpi-cpufreq
+cpufreq-conservative
+cpufreq-ondemand
+cpufreq-powersave
+"
+</pre>}}
+
+== Packages ==
+
+{{Root|emerge net-wireless/wpa_supplicant}}
+
+== Configuration ==
+
+{{File|/etc/conf.d/net|<pre>
+modules="wpa_supplicant"
+rc_need_wlan0="firewall"    # if you are using firewall
+config_wlan0="dhcp"
+wpa_cli_wlan0="-G3600"      # this saves power
+wpa_supplicant_wlan0="-D nl80211"
+
+rc_need_eth0="firewall"    # if you are using firewall
+config_eth0="dhcp"
+</pre>}}
+
+{{Root|ln -s net.lo /etc/init.d/net.wlan0}}
+{{Root|ln -s net.lo /etc/init.d/net.eth0}}
+
+== More hardware ==
+
+* [[User:Alonbl/Intel_Integrated_Graphics_Controller|Video]]
+
+== References ==
+
+* http://www.asrock.com/nettop/overview.asp?Model=Core%20100HT
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-25|type=original}}}}

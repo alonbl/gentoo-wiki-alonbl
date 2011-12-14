@@ -1,0 +1,162 @@
+= Kernel =
+
+{{Kernel||<pre>
+Filesystems --->
+  -*- Native language support --->
+    <M> Codepage 437 (United States, Canada)
+    <M> Codepage 862 (Hebrew)
+    <M> Hebrew charsets (ISO-8859-8, CP1255)
+    <M> NLS ISO 8859-1 (Latin 1; Western European Languages)
+    <M> NLS UTF-8
+</pre>}}
+
+{{File|/etc/conf.d/modules|<pre>
+modules="${modules}
+nls-utf8
+nls-iso8859-1
+nls-cp1255
+"
+</pre>}}
+
+= System =
+
+{{File|/etc/make.conf|<pre>
+USE="${USE} bidi"
+LINGUAS="en he"
+</pre>}}
+
+{{File|/etc/locale.gen|<pre>
+en_US ISO-8859-1
+en_US.UTF-8 UTF-8
+he_IL ISO-8859-8
+he_IL.UTF-8 UTF-8
+</pre>}}
+
+{{File|/etc/env.d/02locale|<pre>
+LANG="he_IL.UTF-8"
+LC_CTYPE="en_US.UTF-8"
+LC_NUMERIC="he_IL.UTF-8"
+LC_TIME="en_US.UTF-8"
+LC_COLLATE="he_IL.UTF-8"
+LC_MONETARY="he_IL.UTF-8"
+LC_MESSAGES="en_US.UTF-8"
+LC_PAPER="he_IL.UTF-8"
+LC_NAME="he_IL.UTF-8"
+LC_ADDRESS="he_IL.UTF-8"
+LC_TELEPHONE="he_IL.UTF-8"
+LC_MEASUREMENT="he_IL.UTF-8"
+LC_IDENTIFICATION="he_IL.UTF-8"
+</pre>}}
+
+{{Root|env-update}}
+{{Root|locale-gen}}
+
+= Mount media =
+
+== VFAT  ==
+
+{{Root|<nowiki>mount -o iocharset=cp1255,utf8 /dev/sda1 /mnt/tmp</nowiki>}}
+
+== NTFS ==
+
+{{Root|mount -o utf8 /dev/sda1 /mnt/tmp}}
+
+== SMB ==
+
+{{Root|<nowiki>mount -t cifs -o iocharset=utf8,username=user1 //server/share</nowiki>}}
+
+= Desktop =
+
+== Fonts ==
+
+Basic font to enable system:
+
+{{Root|emerge media-fonts/dejavu}}
+
+Usually no other font is needed, the following fonts adds some spice:
+
+* {{Package|media-fonts/culmus}}
+* {{Package|media-fonts/free-bangla-font}}
+* {{Package|media-fonts/freefonts}}
+* {{Package|media-fonts/intlfonts}}
+* {{Package|media-fonts/urw-fonts}}
+
+== KDE ==
+
+
+{{Root|emerge kde-base/kde-l10n}}
+
+SystemSettings->Input Devices
+{{Codeline|<pre>
+  Layouts
+
+    Layout Indicator
+      [X] Show layout indicator
+      [O] Show flag
+
+    Switching Policy
+      [O] Window
+
+    [V] Configure layouts
+      us English (US)
+      il Hebrew default
+      il Hebrew Hebrew (lyx) <-- if you want NIKUD
+
+  Advanced
+
+    [V] Configure keyboard options
+      [V] Keys(s) to change layout
+        [V] Alt+Shift
+</pre>}}
+
+For <Shift><Alt><Tab> to work (Reverse window switching> a patch is needed for xorg-server. See https://bugs.freedesktop.org/show_bug.cgi?id=865.
+
+= Applications =
+
+== vlc ==
+
+Make sure you translate subtitles to utf-8
+{{Command|iconv -f CP1255 -t UTF-8 < in > out}}
+
+= Servers =
+
+== Samba Server ==
+
+Set the following:
+{{File|/etc/samba/smb.conf|<pre>
+        dos charset = CP1255
+        unix charset = UTF-8
+        display charset = UTF-8
+        short preserve case = yes
+        preserve case = yes
+</pre>}}
+
+= Samples =
+
+== {{Package|www-client/firefox}} ==
+
+[http://www.mechon-mamre.org/c/ct/c0101.htm Machon Mamre]
+
+[[File:Firefox_Hebrew_Genesis.jpg]]
+
+== {{Package|app-text/bibletime}} ==
+
+Use: Frank Ruehl CLM font.
+
+[[File:Bibletime_Hebrew_Genesis.jpg]]
+
+== {{Package|app-office/libreoffice}} ==
+
+Use dejavu fonts as much as possible.
+
+[[File:libreoffice_Hebrew.jpg]]
+
+= Maintainer =
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}
+
+[[Category:Localization]]
+[[Category:Servers]]
+[[Category:Software]]

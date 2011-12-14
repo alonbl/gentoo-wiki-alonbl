@@ -1,0 +1,103 @@
+== Global Configuration ==
+
+I keep portage at /var/gentoo, don't like to modify /usr.
+
+{{File|/etc/make.conf|<pre>
+CHOST="x86_64-pc-linux-gnu"
+CFLAGS="-O2 -march=native -fomit-frame-pointer -pipe"
+CXXFLAGS="${CFLAGS}"
+MAKEOPTS="-j3"                      # number of CPUs+1
+PORTDIR="/var/gentoo/portage"
+DISTDIR="/var/gentoo/distfiles"
+PKGDIR="/var/gentoo/packages"
+PORTAGE_GPG_DIR="/etc/portage/gnupg"
+FEATURES="webrsync-gpg parallel-fetch userfetch userpriv usersandbox"
+EMERGE_DEFAULT_OPTS="--quiet-build=n"
+SYNC=""
+
+USE="${USE} mmx sse sse2 sse3 caps fam"
+USE="${USE} -gnome -handbook"
+USE="${USE} -cxx -ruby -perl -fortran -python -lua -java"
+USE="${USE} -berkdb -gdbm -hal -branding -gstreamer -semantic-desktop"
+USE="${USE} nocxx" # temp
+</pre>}}
+
+{{File|/etc/make.profile|<pre>
+->../var/gentoo/portage/profiles/default/linux/amd64/10.0/no-multilib
+</pre>}}
+
+== Licensing ==
+
+Free open source licenses that are accepted for free usage.
+
+Following is basic configuration of portage to allow only free licenses for a basic system.
+
+Accept only free licenses:
+
+{{File|/etc/make.conf|<pre>
+ACCEPT_LICENSE="-* @FSF-APPROVED @FSF-APPROVED-OTHER freedist Artistic"
+</pre>}}
+
+{{File|/etc/portage/package.license/system.conf|<pre>
+app-arch/bzip2 BZIP2
+app-arch/unzip Info-ZIP
+app-arch/zip Info-ZIP
+sys-apps/man-pages-posix man-pages-posix
+sys-apps/tcp-wrappers tcp_wrappers_license
+sys-devel/flex FLEX
+sys-libs/cracklib CRACKLIB
+</pre>}}
+
+{{File|/etc/portage/package.license/tools.conf|<pre>
+sys-apps/debianutils SMAIL
+sys-process/lsof lsof
+</pre>}}
+
+{{File|/etc/portage/package.license/x11.conf|<pre>
+media-libs/mesa kilgard
+x11-misc/imake imake
+x11-misc/xkeyboard-config xkeyboard-config
+x11-misc/xorg-cf-files xorg-cf-files
+x11-proto/trapproto trapproto
+x11-proto/xf86bigfontproto xf86bigfontproto
+x11-proto/xf86rushproto xf86rushproto
+media-libs/fontconfig fontconfig
+</pre>}}
+
+== USE flags ==
+
+{{File|/etc/portage/package.use/my-system.conf|<pre>
+sys-devel/gcc cxx -nocxx
+</pre>}}
+
+== Always none stable ==
+
+ <sys-apps/portage-9999 ~amd64 **     # sets
+ net-firewall/firehol ~amd64          # no choice
+
+== Kernel ==
+
+== Kernel ==
+
+
+The base of kernel configuration is [[User:Alonbl/Linux_Configuration_Common|here]].
+
+Device specific configuration can be found at any of my [[User:Alonbl/Index#Hardware|hardware article]].
+
+== System ==
+
+To make ntpd synchronize faster after power on, add:
+{{File|/etc/conf.d/hwclock|<pre>
+clock_systohc="YES"
+</pre>}}
+
+{{File|/etc/profile.d/editor.sh|<pre>
+export PAGER="less"
+export EDITOR="vim"
+</pre>}}
+
+Set:
+{{File|/etc/rc.conf|<pre>
+rc_parallel="YES"
+rc_hotplug="*"
+</pre>}}

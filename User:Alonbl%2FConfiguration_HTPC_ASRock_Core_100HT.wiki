@@ -1,0 +1,360 @@
+= Alon Bar-Lev's HTPC ASRock Core 100HT =
+
+It took a lot of time to assemble a complete HTPC setup which is Linux compatible, small, quiet.
+
+I use this configuration as Internet Radio, DVD, movies, game console, print server.
+
+Following I describe my setup.
+
+== Hardware ==
+
+=== Computer ===
+
+==== ASRock Core 100HT ====
+
+[[File:ASRock_Core_100HT.jpg|300px]] [http://www.asrock.com/nettop/overview.asp?Model=Core%20100HT Vendor]
+
+Main features: A complete Intel chipset, small, quiet, many USB ports, HDMI 1080p.
+
+The IR remote control is usable under Linux with some patches, however it is very primitive.
+
+=== Input devices ===
+
+==== Koribo Irad ====
+
+[[File:Koribo_Irad.png|300px]] [http://www.koribo.com/pd2_Koribo--Irad.aspx Vendor]
+
+USB:
+ ID 1241:0504 Belkin
+
+I actually have bought the two separately (llro, XGene), so I have two receivers, unless the kit comes with special receiver, one does not work correctly with keyboard and remote.
+
+Main features: Standard HID device, most of keys are operational under Linux.
+
+The optical mouse is *AMAZING*!!!
+
+==== Sony DualShock3 SixAxis ====
+
+[[File:Sony_DualShock3_SixAxis.png|300px]] [http://store.sony.com/webapp/wcs/stores/servlet/ProductDisplay?catalogId=10551&storeId=10151&langId=-1&partNumber=PS398050 Vendor]
+
+Main features: Supported by Linux kernel, Full HID emulation, USB and Bluetooth medium support.
+
+=== Communications ===
+
+[[File:Nano_Bluetooth_USB_Adapter.jpg|150px]]
+
+Main features: Supported by Linux kernel, Bluetooth 2 spec.
+
+USB:
+ ID 0a12:0001 Cambridge Silicon Radio, Ltd Bluetooth Dongle (HCI mode)
+
+=== Storage ===
+
+==== Seagate Black Armor 110 ====
+
+[[File:Seagate_BlackArmor_110.png|300px]] [http://www.seagate.com/www/en-us/products/network_storage/blackarmor/ Vendor]
+
+Main features: Network attached storage, CIFS, FTP, NFS. Decent security model.
+
+== System ==
+
+Configure the following base of these references:
+* [[User:Alonbl/Gentoo_Bootstrap]]
+* [[User:Alonbl/Linux_Configuration_Common]]
+* [[User:Alonbl/Linux_Configuration_ASRock_Core_100HT]]
+* [[Firewall_Using_Firehol]]
+* [[Suspend_To_Disk_Using_uswsusp_and_genkernel|software suspend]]
+* [[Bluetooth]]
+* [[Sony_DualShock3_SixAxis|configuration]]
+* [[USB_Power_Saving]]
+* [[Secured_Portage_Sync]]
+* [[Fbsplash]] I use splash to ease the acceptance of the machine with humans.
+
+Profile:
+ /etc/make.profile -> ../var/gentoo/portage/profiles/default/linux/amd64/10.0/no-multilib
+
+{{File|/etc/make.conf|<pre>
+CHOST="x86_64-pc-linux-gnu"
+CFLAGS="-O2 -march=native -fomit-frame-pointer -pipe"
+CXXFLAGS="${CFLAGS}"
+USE="${USE} mmx sse sse2 caps fam"
+USE="${USE} bluetooth alsa joystick"
+USE="${USE} kde qt4 qt3support X xinerama opengl"
+USE="${USE} jpeg jpeg2k tiff png svg"
+USE="${USE} mp3 ogg vorbis"
+USE="${USE} mpeg"
+USE="${USE} bidi"
+USE="${USE} lzma"
+USE="${USE} curl samba logrotate vim-syntax"
+USE="${USE} -cups -gnome -qt3 -handbook"
+USE="${USE} -cxx -ruby -perl -fortran -python -lua -java"
+USE="${USE} -berkdb -gdbm -branding -esd -gstreamer -semantic-desktop -hal"
+VIDEO_CARDS="intel"
+INPUT_DEVICES="evdev"
+</pre>}}
+
+Special USE flags:
+{{Codeline|<pre>
+media-video/vlc dbus id3tag ffmpeg aac a52 aalib taglib truetype cdda cddax cddb cdio dvd encode xv rtsp live ogmusepack run-as-root
+media-libs/libsdl xv
+</pre>}}
+
+== Video ==
+
+I have found that connecting TV using VGA gives a better resolution than using the HDMI device, I was quite surprised.
+
+There is one challenge though, how to make the computer boot with TV turned off and set up correct resolution at the absent of DDC, and how to ignore the HDMI port.
+
+Ended up with the following X11 video configuration, which forces resolution and ignores DDC override.
+
+{{File|/etc/X11/xorg.conf|<pre>
+Section "ServerLayout"
+        Identifier     "Default"
+        Screen         "Screen1"
+EndSection
+
+Section "ServerFlags"
+        Option      "blank time"    "10"    # 10 minutes
+        Option      "standby time"  "20"
+        Option      "suspend time"  "30"
+        Option      "off time"      "60"
+        Option      "DefaultServerLayout"   "Default"
+EndSection
+
+Section "dri"
+        Group           0
+        Mode            0666
+EndSection
+
+Section "Extensions"
+        Option          "Composite"     "Enable"
+EndSection
+
+Section "Monitor"
+        Identifier   "none"
+        Option       "Ignore" "true"
+EndSection
+
+Section "Monitor"
+        Identifier   "Monitor1"
+        VendorName   "Monitor Vendor"
+        ModelName    "Monitor Model"
+        ModeLine     "1360x768"  85.50  1360 1424 1536 1792  768 771 777 795 +hsync +vsync
+EndSection
+
+Section "Screen"
+        Identifier   "Screen1"
+        Device       "Card0"
+        Monitor      "Monitor1"
+        Option       "ConnectedMonitor" "Monitor1"
+        SubSection   "Display"
+                Depth 24
+                Modes "1360x768"
+        EndSubSection
+EndSection
+
+Section "Device"
+        Identifier  "Card0"
+        Driver      "intel"
+        VendorName  "Intel Corporation"
+        BoardName   "Arrandale Integrated Graphics Controller"
+        BusID       "PCI:0:2:0"
+        Option      "monitor-HDMI1" "none"
+        Option      "monitor-VGA1" "Monitor1"
+EndSection
+</pre>}}
+
+== Power ==
+
+=== Common ===
+{{File|/etc/hibernate/ususpend-ram.conf|<pre>
+USuspendRamForce yes
+</pre>}}
+
+=== Bluetooth ===
+
+Disable bluetooth during sleep.
+
+{{File|/etc/hibernate/common.conf|<pre>
+OnSuspend 90 echo 0 > /sys/class/rfkill/rfkill0/state
+OnResume  90 echo 1 > /sys/class/rfkill/rfkill0/state
+</pre>}}
+
+=== Wakeup from LAN ===
+
+{{Root|emerge sys-apps/ethtool}}
+
+{{File|/etc/hibernate/common.conf|<pre>
+OnSuspend 90 ethtool -s eth0 wol g
+</pre>}}
+
+=== Wakeup from Input ===
+
+In order to allow wakeup by remote control/keyboard, you need to determine which USB bus the receiver is connected, for example:
+
+{{Root|lsusb}}
+{{Codeline|<pre>
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 001 Device 002: ID 8087:0020 Intel Corp. Integrated Rate Matching Hub
+Bus 002 Device 002: ID 8087:0020 Intel Corp. Integrated Rate Matching Hub
+Bus 002 Device 003: ID 0a12:0001 Cambridge Silicon Radio, Ltd Bluetooth Dongle (HCI mode)
+Bus 002 Device 004: ID 1241:0504 Belkin 
+Bus 002 Device 005: ID 1241:0504 Belkin 
+Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+</pre>}}
+
+"Belkin" is the device, and it resides at bus 002 device 004 and 005, now, let's see which PCI controller it is:
+
+{{Root|ls -la /sys/bus/usb}}
+{{Codeline|<pre>
+total 0
+drwxr-xr-x 2 root root 0 Nov 26 22:21 .
+drwxr-xr-x 4 root root 0 Nov 26 22:21 ..
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 1-0:1.0 -> ../../../devices/pci0000:00/0000:00:1a.0/usb1/1-0:1.0
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 1-1 -> ../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 1-1:1.0 -> ../../../devices/pci0000:00/0000:00:1a.0/usb1/1-1/1-1:1.0                                                                                                    
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 2-0:1.0 -> ../../../devices/pci0000:00/0000:00:1d.0/usb2/2-0:1.0
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 2-1 -> ../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 2-1.1 -> ../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.1
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 2-1:1.0 -> ../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1:1.0                                                                                                    
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 2-1.1:1.0 -> ../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.1/2-1.1:1.0                                                                                          
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 2-1.1:1.1 -> ../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.1/2-1.1:1.1                                                                                          
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 2-1.4 -> ../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.4
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 2-1.4:1.0 -> ../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.4/2-1.4:1.0                                                                                          
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 2-1.4:1.1 -> ../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.4/2-1.4:1.1                                                                                          
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 2-1.5 -> ../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.5
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 2-1.5:1.0 -> ../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.5/2-1.5:1.0                                                                                          
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 2-1.5:1.1 -> ../../../devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.5/2-1.5:1.1                                                                                          
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 3-0:1.0 -> ../../../devices/pci0000:00/0000:00:1c.1/0000:02:00.0/usb3/3-0:1.0                                                                                           
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 4-0:1.0 -> ../../../devices/pci0000:00/0000:00:1c.1/0000:02:00.0/usb4/4-0:1.0                                                                                           
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 usb1 -> ../../../devices/pci0000:00/0000:00:1a.0/usb1
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 usb2 -> ../../../devices/pci0000:00/0000:00:1d.0/usb2
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 usb3 -> ../../../devices/pci0000:00/0000:00:1c.1/0000:02:00.0/usb3                                                                                                      
+lrwxrwxrwx 1 root root 0 Nov 26 22:21 usb4 -> ../../../devices/pci0000:00/0000:00:1c.1/0000:02:00.0/usb4                                                                                                      
+</pre>}}
+
+We can see that these devices are at pci0000:00/0000:00:1d.0.
+
+Now, let's see which ACPI event it is:
+
+{{Root|cat /proc/acpi/wakeup}}
+{{Codeline|<pre>
+Device  S-state   Status   Sysfs node
+P0P1      S4    *disabled  
+P0P3      S4    *disabled  
+P0P4      S4    *disabled  pci:0000:00:04.0
+P0P5      S4    *disabled  
+P0P6      S4    *disabled  
+BR1E      S4    *disabled  pci:0000:00:1e.0
+CIR       S4    *disabled  pnp:00:06
+EUSB      S4    *disabled  
+USB0      S4    *disabled  pci:0000:00:1d.0
+USB1      S4    *disabled  
+USB2      S4    *disabled  
+USB3      S4    *disabled  
+USBE      S4    *disabled  
+USB4      S4    *disabled  pci:0000:00:1a.0
+USB5      S4    *disabled  
+USB6      S4    *disabled  
+BR20      S4    *disabled  pci:0000:00:1c.0
+BR21      S4    *disabled  pci:0000:00:1c.1
+BR22      S4    *disabled  
+BR23      S4    *disabled  
+BR24      S4    *disabled  
+BR25      S4    *disabled  
+BR26      S4    *disabled  
+BR27      S4    *disabled  
+</pre>}}
+
+It is USB0!!!
+
+So add the following to ensure wakeup:
+{{File|/etc/hibernate/ram.conf|<pre>
+OnSuspend 90 cat /proc/acpi/wakeup | grep USB0 | grep disabled > /dev/null && echo USB0 > /proc/acpi/wakeup || true
+</pre>}}
+
+== Input ==
+
+=== Acceleration ===
+
+Both keyboard and remote control are acting as HID devices, however, I would like to have the keypad of remote control change radio stations.
+
+I use {{Package|app-misc/actkbd}}
+
+{{File|~/.actkbd/actkbd-kbd.conf|<pre>
+79:key::"/home/guest/Media/Radio/station1"
+80:key::"/home/guest/Media/Radio/station2"
+81:key::"/home/guest/Media/Radio/station3"
+85:key::"/home/guest/Media/Radio/station4"
+76:key::"/home/guest/Media/Radio/station5"
+82:key::"/home/guest/Media/Radio/dvd"
+</pre>}}
+
+Determine keys is done by executing the actkbd in foreground and in maximum verbosity. Refer to package documentation.
+
+I use KDE, the following runs the actkbd at login:
+
+{{File|~/.kde4/Autostart/run-actkbd-kbd.sh|<pre>
+#!/bin/sh
+exec actkbd --device /dev/input//by-path/pci-0000:00:1d.0-usb-0:1.4:1.0-event-kbd --config ~/.actkbd/actkbd-kbd.conf
+</pre>}}
+
+== User Interface ==
+
+A user "guest" is defined, part of the following groups: audio, cdrom, users, games.
+
+I use KDE as user interface, not much but usable.
+
+{{Package|x11-misc/slim}} is used as login manager, with the following altered, to enable auto login of guest user:
+
+{{File|/etc/slim.conf|<pre>
+login_cmd           exec /bin/bash --login /etc/X11/Sessions/KDE-4
+default_user        guest
+auto_login          yes
+</pre>}}
+
+== Extra Packages ==
+
+* {{Package|kde-base|direct=yes}}
+* {{Package|x11-misc/slim}}
+* {{Package|app-misc/actkbd}}
+* {{Package|media-video/vlc}}
+
+== Games ==
+
+I found the following games usable for my kids:
+* {{Package|games-arcade/moleinvasion}} USE: {{UseFlag|music}}
+* {{Package|games-arcade/pacmanarena}}
+* {{Package|games-arcade/smc}} USE: {{UseFlag|music}}
+* {{Package|games-arcade/supertux}}
+* {{Package|games-emulation/stella}}, As for 3.4.1 for proper work with DualShock must use upstream trunk.
+** [http://www.romnation.net/srv/roms/10602/atari2600/Tank-Plus-1977-Sears.html Tank Plus (1977) (Sears)]
+** [http://www.romnation.net/srv/roms/10605/atari2600/Tape-Worm-1982-Spectravideo.html Tape Worm (1982) (Spectravideo)]
+** [http://www.romnation.net/srv/roms/9260/atari2600/Breakout-Breakaway-IV-1978-Atari.html Breakout - Breakaway IV (1978)]
+* {{Package|games-emulation/dosbox}}
+** [http://www.dosgamesarchive.com/download/digger/ Digger]
+** [http://www.abandonia.com/en/games/385/.html Test Driver]
+** [http://www.dosgames.com/dl.php?filename=http://www.dosgames.com/files/gobman11.zip gobman]
+* {{Package|games-sports/speed-dreams}}
+* {{Package|games-sports/torcs}}
+* {{Package|games-sports/trigger}}
+{{File|~/.trigger/trigger.config|<pre>
+        <video
+                width="1360"
+                height="768"
+                bpp="0"
+                
+                fullscreen="yes"
+<snip>
+        <joystick enable="yes">
+<snip>
+</pre>}}
+* {{Package|kde-base/kreversi}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}

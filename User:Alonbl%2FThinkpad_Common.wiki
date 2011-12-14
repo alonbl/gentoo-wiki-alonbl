@@ -1,0 +1,121 @@
+
+IBM Thinkpad mobile computers were always a great choice for Linux users. The BIOS and peripheral were supported due to IBM discloser of hardware specs.
+
+Thinkpad BIOS was always compatible for suspend to ram and and suspend to disk.
+
+Thinkpad ACPI module translated events read from NVRAM to actual ACPI events (such as dock, lid and button events). The NVRAM is a special device that
+can be used in order to read the state of the special Thinkpad keys. It is not event driven, so it must be pulled by
+the Thinkpad ACPI module.
+
+HDAPS (Hard disk protection system) is a feature of Thinkpad that senses movements, and may use in order to park disks in order to keep them safe.
+
+Recently also TPM chip was added, it is standard 1.2 TPM device and may be used by TPM enabled software.
+
+== Kernel ==
+
+Typical Thinkpad specific configuration:
+
+{{Kernel||<pre>
+  Power management and ACPI options  --->
+    [*] Suspend to RAM and standby
+    [*] Hibernation (aka 'suspend to disk')
+    [*] Run-time PM core functionality
+    [*] ACPI (Advanced Configuration and Power Interface) Support  --->
+      <M>   AC Adapter
+      <M>   Battery
+      -*-   Button
+      -*-   Video
+      <M>   Fan
+      [*]   Dock
+      <M>   Processor
+      <M>   Thermal Zone
+    CPU Frequency scaling  --->
+      [*] CPU Frequency scaling
+      <M>   CPU frequency translation statistics
+      [*]     CPU frequency translation statistics details
+      Default CPUFreq governor (performance)  --->
+      -*-   'performance' governor
+      <M>   'powersave' governor
+      <M>   'userspace' governor for userspace frequency scaling
+      <M>   'ondemand' cpufreq policy governor
+      <M>   'conservative' cpufreq governor
+      x86 CPU frequency scaling drivers  --->
+        <M> ACPI Processor P-States drivers
+    -*- CPU idle PM support
+    [*]   Cpuidle Driver for Intel Processors
+  Device Drivers  --->
+    Character devices  --->
+      <M> TPM Hardware Support  --->
+        <M>   TPM Interface Specification 1.2 Interface
+    [*] X86 Platform Specific Device Drivers  --->
+      <M>   ThinkPad ACPI Laptop Extras 
+      [*]     Console audio control ALSA interface
+      [*]     Allow control of important LEDs (unsafe)
+      [*]     Video output control support
+      [*]     Support NVRAM polling for hot keys
+</pre>}}
+
+{{File|/etc/conf.d/modules|<pre>
+modules="${modules} thinkpad_acpi"
+
+modules="${modules}
+ac
+battery
+fan
+processor
+thermal
+coretemp
+"
+
+modules="${modules}
+acpi-cpufreq
+cpufreq-conservative
+cpufreq-ondemand
+cpufreq-powersave
+"</pre>}}
+
+== Misc ==
+
+=== X11 ===
+
+To use scroll add the following to your mouse section:
+
+{{File|/etc/X11/xorg.conf|<pre>
+        Option          "Buttons"               "3"
+        Option          "EmulateWheel"
+        Option          "EmulateWheelButton"    "2"
+</pre>}}
+
+=== hdaps ===
+
+{{File|/etc/portage/package.use/thinkpad.conf|<pre>
+app-laptop/tp_smapi hdaps
+</pre>}}
+
+{{Root|emerge app-laptop/tp_smapi app-laptop/hdapsd}}
+
+Until {{Bug|392475}} resolved, add at end:
+{{File|/etc/conf.d/hdapsd|<pre>
+OPTIONS="${OPTIONS} -l"
+</pre>}}
+
+{{Root|rc-update add hdapsd default}}
+{{Root|/etc/init.d/hdapsd start}}
+
+==== KDE widget ====
+
+{{Root|emerge hdaps_monitor}}
+
+Add HDPS widget to tray.
+
+=== TPM ===
+
+TODO
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-25|type=original}}}}
+
+[[Category:Lenovo_Laptops]]

@@ -1,0 +1,81 @@
+= Alon Bar-Lev's Gentoo Documentation =
+
+[[File:Alonbl.jpg|100px|left]]
+
+[mailto:alon.barlev@gmail.com Alon Bar-Lev <alon.barlev@gmail.com>]
+
+[http://alon.barlev.googlepages.com Site]
+
+[http://www.ohloh.net/accounts/19668?ref=Detailed Ohloh][img]http://www.ohloh.net/accounts/19668/widgets/account_detailed.gif[/img]
+
+
+
+
+{{Note|Feel free to contact me regarding any of the subjects of my articles!}}
+{{Note|I will appreciate that before making none-trivial changes in my articles, discuss the change first}}
+
+== About ==
+
+I am using Gentoo since 2005, was a Gentoo developer (alonbl@gentoo.org) 2006-2008.
+
+Gentoo has a great technology, compiling all from sources, optimized to specific target, optimized to specific configuration, without unneeded components, decent support of cross compilers, an init.d layout with dependencies and extensibility and flexible network configuration. I could not and still cannot find better environment for my infrastructure. Had I invented distribution, it was much like Gentoo.
+
+However, Gentoo almost did not change since 2004. That's true that portage is progressing slowly, and baselayout was forked to [http://roy.marples.name/projects/openrc OpenRC], was re-written and cleaned up (I tried to help as much as I could), but the Gentoo users gets more or less the same feature set.
+
+The Gentoo developer community (most of the developers) has monolithic culture of serving whatever interest the developers, not the Gentoo user base, as a result bugs are not handled, new package features are not added, and it takes ages to get some relevant information of reasoning. This is the major reason I resigned as Gentoo developer and many other good developers left. In time it gets even worse.
+
+But still, there is no other distribution that provides even close flexibility, and as there is no difference between Gentoo developer and good maintainer, it still worth using.
+
+I believe in documentation, since 2006 there was some talked about introducing a wiki for user to exchange information, then was this gentoo-wiki.com site filling the gap, I waited and waited, each year I deferred my work as I did not want to start using external resource, and recently (Nov-2011), the official Gentoo wiki was initiated. However, as I should have expected, the official wiki was moderated, the Gentoo developers enforced their views of what/how information should be shared, so I removed my information from there and started from scratch here at gentoo-wiki.com, hoping to be able to actually maintain the information, I should have done this years ago.
+
+My approach is maintained documentation, documentation by example, documentation of real setups. So I created some articles of which I maintain to follow my acquired knowledge over time.
+
+== Technical Approach ==
+
+Minimal approach, minimal configuration of the kernel and minimal configuration of every other component.
+
+I try hard to implement "least privileged mode", whenever I can.
+
+I also make most I can from OpenRC.
+
+I document my own working configuration nothing more, this in order to make it as simple as it can be to the reader.
+
+I try my best to work as much stable as I can, but sometimes setup enforce to go unstable, I maintain a list of unstable components.
+
+== Workstation ==
+
+I am using laptop, OpenVPN, qemu, firewall and more, I believe my setup is interesting enough to be serve as a good example of development desktop.
+
+More detailed on my configuration is available [[User:Alonbl/Configuration_Workstation|here]].
+
+== Servers ==
+
+In most organization I've been managing servers, there was Windows Active Directory Domain, I had to integrate with. So Kerberos, LDAP were needed to be setup correctly.
+
+My servers use subversion, git, ViewVC, Bugzilla, Hudson, Artifactory, WebDAV, Cacti, OpenVPN, qemu and more, I think the setup is interesting enough to be serve as a good example.
+
+More information is available [[User:Alonbl/Configuration_Server|Here]].
+
+== HTPC ==
+
+I also have configuration of home theater / game machine.
+
+More information is available [[User:Alonbl/Configuration_HTPC_ASRock_Core_100HT|Here]].
+
+== More ==
+
+Kerberos, networking, security and more at [[/Index]].
+
+== Page Index ==
+
+[[/Index]]
+
+== Gentoo Bugs I Monitor ==
+
+[https://bugs.gentoo.org/buglist.cgi?emailreporter2=1;emailtype2=substring;list_id=592793;emailcc2=1;query_format=advanced;bug_status=UNCONFIRMED;bug_status=CONFIRMED;bug_status=IN_PROGRESS;email2=alon.barlev%40gmail.com;emailassigned_to2=1;emaillongdesc2=1 list]
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}

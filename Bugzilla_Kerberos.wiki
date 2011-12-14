@@ -1,0 +1,30 @@
+= Bugzilla Kerberos =
+
+Bugzilla kerberos configuration.
+
+== Installation ==
+
+Make sure kerberos integration is working, including apache configuration, see [[MIT_Kerberos_Windows_Domain]], you need only apache integration *NOT* pam/nss integration.
+
+== Bugzilla Configuration ==
+
+Make sure you are able to access bugzilla with kerberous configuration, although there is no integration, you should be able to use is using password authentication.
+
+Make sure your current kerberos user exists within bugzilla and it has administrative permissions. You won't be able to use different user than the kerberos one after configuration.
+
+Administration → Parameters → User Authentication
+  auth_env_id: REMOTE_USER
+  auth_env_email: REMOTE_USER
+  user_info_class: ENV
+  user_verify_class: DB
+
+== Author ==
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}
+
+[[Category:Software]]
+[[Category:Security]]

@@ -1,0 +1,39 @@
+= Lenovo UVC Camera =
+
+A small webcam embedded within Lenovo laptops.
+
+USB
+{{Codeline|<pre>
+17ef:4807 Lenovo UVC Camera
+</pre>}}
+
+Fortunately it is standard camera!
+
+== Kernel ==
+
+{{Kernel||<pre>
+  Device Drivers  --->
+    <M> Multimedia support  --->
+      <M>   Video For Linux
+      [*]   Video capture adapters  --->
+        [*]   Autoselect pertinent encoders/decoders and other helper chips
+        [*]   V4L USB devices  --->
+          <M>   USB Video Class (UVC)
+          [*]     UVC input events device support
+</pre>}}
+
+== Test ==
+
+{{File|/etc/portage/package.use/vlc.conf|<pre>
+media-video/vlc v4l
+</pre>}}
+
+{{Command|vlc v4l2:///dev/v4l/by-id/usb-Chicony_Electronics_Co.__Ltd._4807-video-index0}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-25|type=original}}}}
+
+[[Category:Hardware]]

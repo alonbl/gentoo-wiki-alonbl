@@ -1,0 +1,41 @@
+= Intel Integrated Graphics Controller =
+
+Most Pentium-M computers have Intel Integrated Graphics controller in addition to more powerful one. As Intel cooperate with Open Source development, using this video device is usually more stable even if it lacks some features.
+
+PCI
+ 00:02.0 VGA compatible controller [0300]: Intel Corporation Mobile 4 Series Chipset Integrated Graphics Controller [8086:2a42] (rev 07)
+
+== Kernel ==
+
+{{Kernel||<pre>
+  Device Drivers  --->
+    Graphics support  --->
+      <*> /dev/agpgart (AGP Support)  ---> 
+        <*>   Intel 440LX/BX/GX, I8xx and E7x05 chipset support
+      <*> Direct Rendering Manager (XFree86 4.1.0 and higher DRI support)  --->
+        <*>   Intel 8xx/9xx/G3x/G4x/HD Graphics
+        [*]     Enable modesetting on intel by default 
+</pre>}}
+
+== Framebuffer ==
+
+Driver is inteldrmfb, for example, use the following kernel parameters:
+  video=inteldrmfb:1920x1200-32@60
+
+== X11 ==
+
+{{File|/etc/make.conf|<pre>
+USE="${USE} xv"
+VIDEO_CARDS="intel"
+</pre>}}
+
+Enable some more acceleration:
+{{File|/etc/portage/package.use/x11.conf|<pre>
+x11-drivers/xf86-video-intel sna
+</pre>}}
+
+{{Root|emerge --update --deep --newuse @world}}
+
+No need for any special switches, xorg-server will properly detect the card and work. xrandr utility can be used to manipulate the resolution, ports, placement.
+
+{{Root|X -configure}}

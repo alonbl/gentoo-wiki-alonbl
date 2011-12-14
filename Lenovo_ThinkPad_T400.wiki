@@ -1,0 +1,813 @@
+This article is dedicated to getting hardware specific to the Lenovo ThinkPad T400, T500 and W500 with switchable graphics, and the W700 working smoothly on Gentoo Linux.
+
+==Hardware overview==
+
+{{FixMe|Need more W700 specific information}}
+
+The ThinkPad W500/T500/T400 laptops are built around Intel's Centrino 2 platform, including Intel WiFi Link 5100/5300 and the Intel G45 chipset which includes the Intel GMA X4500HD.
+Some of these have only the Intel GMA X4500HD (henceforth called "integrated") and some have both the integrated graphics card and an ATI card (henceforth called "discrete") based on the M86 GPU (T500/W500) and on the M82 GPU (T400).
+
+Apparently, the only difference between the T500 and the W500 on the motherboard is the amount of graphics memory installed (512MB for the W500 and a very meager 256MB for the T500).
+The card on the T500 is marketed as a Radeon HD 3650 and the card on the W500 as a Mobility FireGL V5700.
+The extent to which the graphics drivers differ for each case is yet to be known.
+
+Most of the configuration for these laptops will be similar to that of any other Centrino 2 based laptop, another part similar to other computers with ATI cards and another similar to that of other ThinkPads.
+So, it is important to keep an eye on what goes on on similar laptops and on these laptops on other distros.
+That is why a section of Links exists at the bottom of this topic.
+
+==Installation Prep==
+
+The Thinkpad T400 laptop features a sata CD/DVD drive which is not recognized by the Gentoo minimal install CD.  The Ubuntu LiveCD works well with the T400 for installing Gentoo.
+
+Boot into a LiveCD and switch to root in a terminal.  Through this terminal we are ready to continue on with setting up Gentoo following the handbook at Chapter4, "Preparing the Disks".
+
+There is a slight difference when you get to chapter 6 of the Handbook, when it comes time to mount the proc and dev filesystems the commands will be as follows since we're within a LiveCD environment:
+{{Root|<pre>
+#mount -o bind /proc /mnt/gentoo/proc/
+#mount -o bind /dev /mnt/gentoo/dev/</pre>}}
+
+{{Note|Not a lot of people had problems booting the minimal install CD, maybe try it first. The work around stays here in case someone else has this problem.}}
+
+There are also some constraints affecting the choice of kernel version. Because of the wireless card, it's really convenient to choose a kernel version after 2.6.27 as it becomes available in the unmodified kernel tree. However, it must be taken into consideration that the ATI closed source driver must compile a kernel module.
+The first version of the ATI driver which has a kernel module that compiles without changes on (and takes into consideration) kernel 2.6.27 is the 8.55.2 version, available as the ati-driver-8.552 series of ebuilds. I suggest a kernel >=2.6.27 as a starting point. The choice of kernel does not affecting the building of most packages.
+
+Whereas all ATI driver versions apparently support Xorg 6.9 to Xorg 7.4, there has been some trouble getting them to work with Xorg 7.1. For example, a libglx.so file for this Xorg version seemed to be missing and 3D acceleration never worked. Apparently, it was unanimous on the Gentoo user mailing list that unmasking Xorg 7.4 using package.keywords was a better option. It is more or less important to make this choice at the beginning, so as to avoid building the whole world twice with two different versions of Xorg.
+
+Initial install is also a good time to decide which version of GCC you would like to run.  You could choose GCC4.3, because that version of GCC supports "-march=core2", which provides optimizations specific to Core2Duo processors. Refer to the Gentoo GCC Upgrade Guide for comprehensive instructions on upgrading GCC, as well as the example below for configuring {{Path|/etc/make.conf}} using the proper CFLAGS.
+
+This is an example of my current /etc/make.conf. Note that the "-march=core2" CFLAGS setting can only be set after the upgrade to GCC4.3 is complete, and prior to that the recommended safe setting for GCC4.1 is "-march=nocona" - that is what you will initially use for your CFLAGS setting. Once you have upgraded to GCC4.3, you will want to update the CFLAGS setting and recompile all packages on the system using "emerge -eav world". It's best to do this before installing other software packages - this will recompile your entire Gentoo system from source. Refer to the Gentoo GCC Upgrade Guide for comprehensive instructions on upgrading GCC
+{{File|/etc/make.conf|<pre>#Example CFLAGS in /etc/make.conf for T400 on GCC4.3
+CFLAGS="-O2 -march=native -pipe -fomit-frame-pointer"
+CXXFLAGS="${CFLAGS}"
+CHOST="i686-pc-linux-gnu"
+MAKEOPTS="-j4" 
+GENTOO_MIRRORS="http://gentoo.chem.wisc.edu/gentoo/" 
+SYNC="rsync://rsync.namerica.gentoo.org/gentoo-portage" 
+USE="avahi dbus gnome gtk hal ieee1394 laptop lm_sensors sse sse2 sse3 threads wifi" 
+VIDEO_CARDS="intel vesa radeon"
+INPUT_DEVICES="evdev keyboard mouse synaptics" 
+LINGUAS="en"</pre>}}
+
+To build the graphic support you may want to use, you would place the following into {{Path|/etc/make.conf}}:
+{{File|/etc/make.conf|<pre>VIDEO_CARDS="intel vesa radeon fglrx"</pre>}}
+
+Further optimizations can be found in the [[Safe Cflags]] page. I use -msse4.1 as well.
+
+==How do switchable graphics look like low level?==
+
+The BIOS has three settings regarding the graphics card: integrated, switchable and discrete.
+When it is set to integrated, the BIOS turns off the power to the ATI card, text mode output is done via the Intel card (characters appear anti-aliased) and only the Intel card appears on lspci, and the output is the following:
+<pre>
+00:02.0 VGA compatible controller: Intel Corporation Device 2a42 (rev 07) (prog-if 00 [VGA controller])
+	Subsystem: Lenovo Device 2114
+	Flags: bus master, fast devsel, latency 0, IRQ 11
+	Memory at f4400000 (64-bit, non-prefetchable) [size=4M]
+	Memory at d0000000 (64-bit, prefetchable) [size=256M]
+	I/O ports at 1800 [size=8]
+	Capabilities: [90] Message Signalled Interrupts: Mask- 64bit- Queue=0/0 Enable-
+	Capabilities: [d0] Power Management version 3
+</pre>
+
+When the BIOS is set to discrete, the BIOS turns off the power to the Intel card, sets the Subsystem ID of the ATI card to 2127 (on the W500), text mode output is done via the ATI card (characters are not anti-aliased) and only the ATI card appears on lspci:
+<pre>
+01:00.0 VGA compatible controller: ATI Technologies Inc Device 9591 (prog-if 00 [VGA controller])
+	Subsystem: Lenovo Device 2127
+	Flags: bus master, fast devsel, latency 0, IRQ 16
+	Memory at d0000000 (32-bit, prefetchable) [size=256M]
+	I/O ports at 2000 [size=256]
+	Memory at cfff0000 (32-bit, non-prefetchable) [size=64K]
+	[virtual] Expansion ROM at cff00000 [disabled] [size=128K]
+	Capabilities: [50] Power Management version 3
+	Capabilities: [58] Express Legacy Endpoint, MSI 00
+	Capabilities: [a0] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 Enable-
+	Capabilities: [100] Vendor Specific Information <?>
+	Kernel driver in use: fglrx_pci
+	Kernel modules: fglrx
+</pre>
+
+When the BIOS is set to switchable, the BIOS turns on both cards, and sets the Subsystem ID of the ATI card to 2126 (on the W500), text mode output is done via the Intel card (anti-aliased) and both cards appear on lspci:
+<pre>
+00:02.0 VGA compatible controller: Intel Corporation Device 2a42 (rev 07) (prog-if 00 [VGA controller])
+	Subsystem: Lenovo Device 2115
+	Flags: bus master, fast devsel, latency 0, IRQ 11
+	Memory at fc000000 (64-bit, non-prefetchable) [size=4M]
+	Memory at d0000000 (64-bit, prefetchable) [size=256M]
+	I/O ports at 1800 [size=8]
+	Capabilities: [90] Message Signalled Interrupts: Mask- 64bit- Queue=0/0 Enable-
+	Capabilities: [d0] Power Management version 3
+
+01:00.0 VGA compatible controller: ATI Technologies Inc Device 9591 (prog-if 00 [VGA controller])
+	Subsystem: Lenovo Device 2126
+	Flags: bus master, fast devsel, latency 0, IRQ 11
+	Memory at c0000000 (32-bit, prefetchable) [size=256M]
+	I/O ports at 2000 [disabled] [size=256]
+	Memory at bfff0000 (32-bit, non-prefetchable) [size=64K]
+	[virtual] Expansion ROM at bff00000 [disabled] [size=128K]
+	Capabilities: [50] Power Management version 3
+	Capabilities: [58] Express Legacy Endpoint, MSI 00
+	Capabilities: [a0] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 Enable-
+	Capabilities: [100] Vendor Specific Information <?>
+	Kernel modules: fglrx
+</pre>
+
+{{Warning|When the BIOS is set to switchable, both graphics cards are powered; not only that, the ATI card clock will be at its highest speed unless the X graphics driver has stepped it down. For this reason, your laptop will get very, very hot. You might want to remove your laptop's battery until you managed to get a configuration which keeps your laptop cool.}}
+
+==Getting graphics to work==
+First, you must choose between the graphics drivers available for your [[Graphics_drivers#AMD.2FATI|AMD/ATI card]] and follow the linked guide.
+===Discrete and fglrx===
+
+The following kernel config options are required in order for the fglrx kernel module to compile and work correctly.
+Note that DRM must be built as a module and that the radeon DRM module cannot be loaded; actually, it does not work with this card (this information may be obsolete. Please test and update).
+Note still, that using fglrx requires setting display to discrete in the BIOS; apparently the chipID is not know to the driver if you choose switchable.
+
+{{Kernel|fglrx kernel config|<pre>
+Processor type and features  --->
+     [ ] Paravirtualized guest support  --->
+     [*] MTRR (Memory Type Range Register) support
+     [ ]   MTRR cleanup support
+     [*]   x86 PAT support
+
+Bus options (PCI etc.)  --->
+     [*] PCI Express support
+     [*] Enable deprecated pci_find_* API
+
+Device Drivers  --->
+         Graphics support  --->
+     <M> Direct Rendering Manager (XFree86 4.1.0 and higher DRI support)  --->
+     <M>   Intel 830M, 845G, 852GM, 855GM, 865G
+     <M>     i915 driver
+
+Kernel hacking  --->
+     [*] Magic SysRq key
+     [*] Enable unused/obsolete exported symbols
+</pre>}}
+
+For more specific help, see the specific [[Fglrx|topic on fglrx]]. 
+{{Note|Because it must compile a kernel module, using the fglrx driver constrains your choice of kernel version. Make sure you choose compatible versions of kernel and fglrx.}}
+
+==== MTRR ====
+
+MTRR may be incorrect in its default form, to verify execute:
+{{Root|cat /proc/mtrr}}
+
+This should look like the following, notice the write-back and write-combining.
+{{Codeline|<pre>
+reg00: base=0x13c000000 ( 5056MB), size=   64MB, count=1: uncachable
+reg01: base=0x0be000000 ( 3040MB), size=   32MB, count=1: uncachable
+reg02: base=0x000000000 (    0MB), size= 2048MB, count=1: write-back
+reg03: base=0x080000000 ( 2048MB), size= 1024MB, count=1: write-back
+reg04: base=0x100000000 ( 4096MB), size= 1024MB, count=1: write-back
+reg05: base=0x0bde00000 ( 3038MB), size=    2MB, count=1: uncachable
+reg06: base=0x0d0000000 ( 3328MB), size=  256MB, count=1: write-combining
+</pre>}}
+
+Example of alternate working configuration:
+{{Kernel||<pre>
+  Processor type and features  --->
+    -*- MTRR (Memory Type Range Register) support
+    [*]   MTRR cleanup support
+    (1)     MTRR cleanup enable value (0-1)
+    (2)     MTRR cleanup spare reg num (0-7)
+</pre>}}
+
+===Discrete Graphics, radeon===
+
+Following [http://www.gentoo.org/doc/en/xorg-config.xml instructions for installing X] using the radeon driver and setting the bios to discrete, you can get discrete graphics working without any issue.  The [http://www.gentoo.org/doc/en/ati-faq.xml Gentoo Linux ATI FAQ] and the [[Radeon|Radeon article]] may also be helpful for this.  Once complete, X should  autoconfigure xorg.conf to work with this configuration.
+
+This is an example of the relevant section in xorg.conf which was automatically created using the radeon driver by following the [http://www.gentoo.org/doc/en/xorg-config.xml instructions for installing X]:
+
+{{File|/etc/X11/xorg.conf|<pre>
+ Section "Device"
+   #Intel Identifier "Card0" 
+   Driver "vesa" 
+   VendorName "Intel Corporation" 
+   BoardName "Unknown Board" 
+   BusID "PCI:0:2:0"
+ 
+   #AMD ATI Radeon
+   Driver "radeon"  
+   BusID "PCI:1:0:0"
+   VendorName "ATI Technologies Inc"
+   BoardName "Unknown Board"
+ EndSection 
+</pre>}}
+
+===Integrated and intel===
+See the [[Intel_GMA|Intel Graphics]] article for more details. While following that guide, remember to build the kernel DRM as module to allow loading of the fglrx/radeon DRM for the discrete GPU, should you want to use discrete graphics later on.
+
+{{File|/etc/X11/xorg.conf|<pre>
+Section "Device"
+  Identifier  "Intel GMA x4500MHD"
+  Driver      "intel"
+
+# For better OpenGL performance
+  Option      "FramebufferCompression" "False"
+EndSection</pre>}}
+
+{{Warning|While the intel driver works with the BIOS display setting set either to integrated or to switchable, if you leave it on the switchable setting, the radeon card will be powered and because no driver is lowering its clock frequency, it will use a lot of power and generate a lot of heat. It is advisable to avoid this, even if just to avoid too much battery wear.}}
+
+===Getting both to work===
+
+Ideally, we would wish to set display to switchable in the BIOS and then start X using either the Intel or the ATI card, maybe with some scripting.
+The biggest obstacle to this, however, is keeping the second card powered down.
+Xorg drivers for a specific card ignore the existence of a second card and therefore the second card is left at its highest clock frequency, consuming a lot of power and generating heat.
+Command line tools for controlling both the Intel and the ATI cards exist, vbetool and radeontool, however, neither of these has the desired functionality.
+Because of this obstacle, for now, we are left wishing, and the best we may hope for is being able to use the integrated and discrete settings.
+
+The second best ideal is having the whole system working with both the integrated and discrete settings and having X automatically use the right driver according to the BIOS setting.
+This is very easy.
+For the console, if you use the VESA framebuffer driver (maybe uvesafb), then it already works for both.
+For X, it is also easy, because you can have several Screen sections in your xorg.conf, and the first one which is working is used.
+So, the solution is to have as many Device sections as you want, one Screen section for the discrete setting and one Screen section for the integrated setting, and add both of them to the ServerLayout section, as in the following excerpt of xorg.conf:
+
+{{File|/etc/X11/xorg.conf|<pre>
+Section "Device"
+  Identifier "intel"
+  Driver "intel"
+  BusID "PCI:0:2:0"
+EndSection
+
+Section "Device"
+  Identifier "fglrx"
+  Driver "fglrx"
+  BusID "PCI:1:0:0"
+EndSection
+
+Section "Device"
+  Identifier "radeon"
+  Driver "radeon"
+  BusID "PCI:1:0:0"
+  Option "DynamicClocks" "on"
+EndSection
+
+Section "Screen"
+  Identifier "Integrated"
+  Device "intel"
+  Monitor "LVDS"
+  DefaultDepth 24
+  SubSection "Display"
+    Depth 24
+    Modes "1920x1200"
+  EndSubSection
+EndSection
+
+Section "Screen"
+  Identifier "Discrete"
+  Device "fglrx"
+  Monitor "LVDS"
+  DefaultDepth 24
+  SubSection "Display"
+    Depth 24
+    Modes "1920x1200"
+  EndSubSection
+EndSection
+
+Section "ServerLayout"
+  Identifier "Default"
+  Screen "Integrated"
+  Screen "Discrete"
+EndSection
+</pre>}}
+
+Putting the "Integrated" screen before "Discrete" in ServerLayout, will force the use of "Integrated" when using the switchable BIOS setting.
+You can use either fglrx or radeon for the "Discrete" screen, whichever you prefer regarding the limitations of each.
+
+If you want to alternate fglrx with intel, you'll need to eselect opengl each time you change BIOS to integrated or discrete.
+You can achieve this automatically with a boot time init.d script such as the following.
+Just add it to the boot runlevel.
+This script deduces that if the fglrx kernel module loaded, then ati opengl libraries are to be used.
+
+{{File|/etc/init.d/eselect-opengl|<pre>#!/sbin/runscript
+
+depend() {
+        need checkroot modules
+}
+
+start() {
+        local retval=0
+        ebegin "Checking for discrete graphics"
+        if lsmod | grep ^fglrx 2>&1 > /dev/null; then
+                if [ `eselect opengl show` != "ati" ]; then
+                        eselect opengl set ati
+                        retval=$?
+                fi
+        else
+                if [ `eselect opengl show` != "xorg-x11" ]; then
+                        eselect opengl set xorg-x11
+                        retval=$?
+                fi
+        fi
+        if [[ $retval -eq 0 ]]; then
+                eend 0
+        else
+                eend 2 "No OpenGL libraries suitable for discrete graphics"
+                return 0
+        fi
+}</pre>}}
+
+
+
+Is all right? "Integrated" And "Switch" ==> Intel , "Discrete" ==> ati :
+
+{{File|/etc/init.d/eselect-opengl|<pre>#!/sbin/runscript
+
+depend() {
+ need checkroot modules
+}
+
+start() {
+ local retval=0
+ ebegin "Checking for discrete graphics"
+ if lspci |grep "\<VGA\>.*\<Intel\>" 2>&1 > /dev/null; then
+  if [ `eselect opengl show` != "xorg-x11" ]; then
+   eselect opengl set xorg-x11
+   retval=$?
+  fi
+ else
+  if [ `eselect opengl show` != "ati" ]; then
+   eselect opengl set ati
+   retval=$?
+  fi
+ fi
+ if [[ $retval -eq 0 ]]; then
+  eend 0
+ else
+  eend 2 "No OpenGL libraries suitable for discrete graphics"
+  return 0
+ fi
+}</pre>}}
+
+==Miscellaneous hardware==
+
+===Processor===
+
+The following kernel config options are suitable to the Intel Core 2 processor on these laptops.
+
+{{Kernel|Intel Centrino 2 kernel config|<pre>
+Processor type and features  --->
+     [*] Symmetric multi-processing support
+         Processor family (Core 2/newer Xeon)  --->
+     (2) Maximum number of CPUs (2-512)
+     [ ] SMT (Hyperthreading) scheduler support
+     [*] Multi-core scheduler support
+</pre>}}
+
+===Power management===
+
+The following power management kernel config options are suitable for this laptop.
+
+{{Kernel|Power management kernel config|<pre>
+Power management options  --->
+     [*] Power Management support
+     [*] Suspend to RAM and standby
+     [*] Hibernation (aka 'suspend to disk')
+     (/dev/sda2) Default resume partition
+     [*] ACPI (Advanced Configuration and Power Interface) Support  --->
+     <*>   AC Adapter
+     <*>   Battery
+     <*>   Button
+     <*>   Video
+     <*>   Fan
+     <*>   Processor
+     <*>     Thermal Zone
+         CPU Frequency scaling  --->
+     [*] CPU Frequency scaling
+     <*>   ACPI Processor P-States driver
+     < >   AMD Opteron/Athlon64 PowerNow!
+     < >   Intel Enhanced SpeedStep (deprecated)
+     < >   Intel Pentium 4 clock modulation
+     [*] CPU idle PM support
+</pre>}}
+
+{{Warning| I had to enable the security chip in the T400 BIOS and disable the security reporting options to make suspend and resume work (Security > Security Chip [Active] and Intel(R) TXT Feature [Disabled]). Otherwise the moon led stays on and the display remains dark after resuming. This was tested and confirmed on BIOS Version 1.1.3,1.1.5 and 1.2.0 with gentoo sources 2.6.27-r8 and 2.6.28-r1, vanilla sources 2.6.29-rc3 and xf86-video-intel 2.6.1 with a Thinkpad T400, Model 6474-A48. DRI is currently disabled. --[[User:Phillme|Phillme]] 15:26, 8 February 2009 (GMT)}}
+
+Since the 0.5.11 version of the hal ebuild, if you compile hal with the laptop use flag, it will pull in pm-utils.
+The good news is that both suspend to ram and suspend to disk are working very well with [http://www.gentoo-wiki.info/Pm-utils pm-utils] and using hal it works out of the box (contrary to using hibernate-script as described in the [http://www.gentoo.org/doc/en/power-management-guide.xml power management guide]).
+One minor tweak though is necessary as of hal 0.5.11: resume works fine with the discrete card, but not with the intel card, for it to work add the following file to /etc/hal/fdi/information (which will replace the corresponding one on /usr/share/hal).
+
+{{File|20-video-quirk-pm-lenovo.fdi|<pre>
+<?xml version="1.0" encoding="ISO-8859-1"?> <!-- -*- SGML -*- --> 
+<deviceinfo version="0.2">
+  <device>
+    <match key="system.hardware.vendor" string="LENOVO">
+    <!-- ThinkPads -->
+      <match key="system.hardware.version" prefix="ThinkPad ">
+        <!-- T400 -->
+        <match key="system.hardware.version" suffix="T400">
+          <merge key="power_management.quirk.vbe_post" type="bool">true</merge>
+          <merge key="power_management.quirk.vbestate_restore" type="bool">true</merge>
+        </match>
+      </match>
+    </match>
+  </device>
+</deviceinfo></pre>}}
+
+
+In some kernels starting from gentoo-sources-2.6.35-r15 the deactivation of the TPM device does not succeed and therefore the suspend process aborts. In the kernel logs there are messages like:
+<blockquote>tpm_tis 00:0a: tpm_transmit: tpm_send: error -5</blockquote>
+
+As a workaround try to add the following file to /etc/modprobe.conf and execute <code>update-modules</code> afterwards. Suspend might work after reloading the module tpm_tis.
+
+{{File|tpm-workaround.conf |<pre>
+#without this, my t400 would not suspend
+options tpm_tis itpm=1
+</pre>}}
+
+It is also possible to tell pm-suspend to remove the ''tpm_tis'' module completely prior suspending. Just add the module to the SUSPEND_MODULES variable in a file in the ''/etc/pm/config.d/'' directory. For example like this:
+
+{{File|/etc/pm/config.d/tpm-workaround |<pre>
+#without this, my t400 would not suspend
+SUSPEND_MODULES="tpm_tis"
+</pre>}}
+
+{{Note|Suspend to ram mostly works, but there are flaws. Some combinations may result in not being able to resume, maybe suspending and then opening lid, maybe issues with a second battery. [For my T500 usecase (kernel 2.6.30, pm-utils 1.2.5, discrete graph.) only first suspend to RAM works. Resume brings display to wrong contrast; second suspended freezes the system.--ps]}}
+
+===SATA controller===
+
+One nice thing about the SATA controller is that it is AHCI and there's no need to go through a long list of controllers in the kernel config.
+
+{{Kernel|SATA controller kernel config|<pre>
+Device Drivers  --->
+     <*> Serial ATA (prod) and Parallel ATA (experimental) drivers  --->
+     [*]   ATA ACPI Support
+     <*>   AHCI SATA support
+     [ ]   ATA SFF support
+</pre>}}
+
+===Ethernet===
+
+Ethernet card configuration is straightforward as usual.
+The only downside is that this card is not enabled by default and not enabled in the install CD kernels.
+PCI Express must be enabled, of course (it is not by default on <gentoo-sources-2.6.28).
+
+{{Kernel|Ethernet kernel config|<pre>
+Bus options (PCI etc.)  --->
+     [*] PCI Express support
+     [*] Message Signaled Interrupts (MSI and MSI-X)
+
+Device Drivers  --->
+     [*] Network device support  --->
+     [*]   Ethernet (1000 Mbit)  --->
+     <*>   Intel(R) PRO/1000 PCI-Express Gigabit Ethernet support
+</pre>}}
+
+===Wireless===
+
+The wireless card seems to work very well, although some have experienced strange delays depending on the AP when using the A band.
+The driver is provided by intel and has been included in the kernel tree from version 2.6.27 onward, and can also be added to previous kernels.
+
+{{Package|sys-kernel/gentoo-sources-2.6.27-r7}} is marked stable in the portage tree. All that is needed is to unmask the wireless card firmware and configuring the correct options in the kernel.
+This can easily be achieved by inserting the proper atoms into package.keywords, maybe with the following commands:
+
+{{Root|<pre>mkdir /etc/portage/package.keywords
+echo net-wireless/iwl5000-code ~amd64 > /etc/portage/package.keywords/iwl5000</pre>}}
+
+Kernel configuration with this kernel is easy:
+
+{{Kernel|Wireless kernel config|<pre>
+General setup  --->
+     [*] Prompt for development and/or incomplete code/drivers
+
+Networking support  --->
+         Wireless  --->
+             <*> Generic IEEE 802.11 Networking Stack (mac80211)
+
+Device Drivers  --->
+     [*] Network device support  --->
+         Wireless LAN  --->
+     [*] Wireless LAN (IEEE 802.11)
+     -*- Intel Wireless Wifi Core
+     [*] Iwlwifi RF kill support
+     <*> Intel Wireless WiFi Next Gen AGN
+     [*]   Enable Spectrum Measurement in iwlagn driver
+     [*]   Enable LEDS features in iwlagn driver
+     [ ]   Intel Wireless WiFi 4965AGN
+     [*]   Intel Wireless WiFi 5000AGN
+</pre>}}
+
+{{Note|You'll need to emerge the {{Package|net-wireless/iwl5000-ucode|direct=yes}} package to install the firmware for your card (your card won't work without it) and probably {{Package|net-wireless/wpa_supplicant|direct=yes}}.}}
+
+Then follow the Gentoo wireless guide. You may find additional info on the specific [[Iwlwifi|iwlwifi topic]].
+
+===USB===
+
+USB is simple. Still, one thing to point out is that OHCI support on Intel chipsets is not necessary, as Intel kept to its initial UHCI proposal.
+
+{{Kernel|USB kernel config|<pre>
+Device Drivers  --->
+     [*] USB support  --->
+     <*>   Support for Host-side USB
+     <*>     EHCI HCD (USB 2.0) support
+     < >     OHCI HCD support
+     <*>     UHCI HCD (most Intel and VIA) support
+</pre>}}
+
+===Bluetooth===
+
+The Gentoo manual covers everything needed for Bluetooth.
+The only item to point out is the correct driver.
+Note that it is connected via USB internally, so USB must be enabled.
+
+{{Kernel|Bluetooth kernel config|<pre>
+Networking support  --->
+     <M>   Bluetooth subsystem support  --->
+     <M>   L2CAP protocol support
+     <M>   SCO links support
+     <M>   RFCOMM protocol support
+     <M>   BNEP protocol support
+     <M>   HIDP protocol support
+           Bluetooth device drivers  --->
+             <M> HCI BCM203x USB driver
+</pre>}}
+
+===Firewire===
+
+Recent Linux kernels have two Firewire stacks to choose from.
+There's no specific comment to make for the T400/T500/W500.
+
+===Laptopicities===
+
+There's a driver in the kernel for ThinkPad specific stuff.
+Mainly this driver handles the ThinkPad specific button events.
+In some cases, the pressing of one of these buttons is completely handled by the BIOS and this driver is not necessary for it (i.e. the ThinkLight).
+In other cases, the pressing of the buttons is handled by this driver and it asks the BIOS to perform the action.
+In yet other cases, the driver asks an entirely different subsystem to perform the action (i.e. backlight control).
+Note that the removable bay and NVRAM polling does not apply to these laptops and that the video output control is better handled by the XRandR extension.
+You'll probably want to read /usr/src/linux/Documentation/laptops/thinkpad-acpi.txt for complete information about this driver.
+
+{{Kernel|Power management kernel config|<pre>
+Power management options  --->
+     [*] ACPI (Advanced Configuration and Power Interface) Support  --->
+     <*>   Video
+Device Drivers  --->
+     [*] Misc devices (/X86 Platform Specific Device Drivers)  --->
+     <*>   ThinkPad ACPI Laptop Extras
+     [ ]     Legacy Removable Bay Support
+     [ ]     Video output control support
+     [ ]     Support NVRAM polling for hot keys
+</pre>}}
+
+Backlight control in console mode works only if you have only ACPI video for backlight control, avoid setting any other backlight control feature in the kernel.
+Backlight control is not 100% working, it looks like it is delayed, when you press the increase or decrease button it seems to set the last setting.
+
+This drivers adds a directory in /proc/acpi/ibm.
+Each of the files in there can be used to poll or control a few subsystems.
+For instance, cat /proc/acpi/ibm/thermal will give you some temperature info (the fourth value is for the ATI GPU), and echo disable > /proc/acpi/ibm/bluetooth will disable bluetooth.
+
+Using hal, all these laptop buttons will be working fine in gnome too, with on screen display for backlight control and sound.
+
+There is known problem of not working sound-mute button (not only T500 issue). See this [http://bugzilla.kernel.org/show_bug.cgi?id=13934 bug] to get more information. Also ThinkVantage button can not be simply used in X. One need to use evdev for getting event information. One possibility is to use [http://bugs.gentoo.org/show_bug.cgi?id=65255 evrouter] or read detailed [[Multimedia_Keys|wiki]]. Example of evrouter config working here:
+{{File|~./.evrouterrc|<pre>Window ""
+"ThinkPad Extra Buttons" "/dev/input/event6" none key/360 "Shell/Command_you_want"</pre>}}
+
+===Active Protection System and Battery Control===
+
+The ThinkPad tp_smapi package works well with these laptops. This provides two kernel modules, a replacement hdaps (the one included in stock kernels doesn't work) and tp_smapi which provides battery status and many interesting options for charging control (not all of which available in the Power Manager on Windows). You'll have to unmask some packages, add hdaps to USE flags, and follow the instruction on [http://www.thinkwiki.org/wiki/Tp_smapi ThinkWiki].
+
+{{Root|<pre>mkdir /etc/portage/package.keywords
+echo app-laptop/tp_smapi > /etc/portage/package.keywords/thinkpad
+echo app-laptop/hdapsd >> /etc/portage/package.keywords/thinkpad
+echo app-laptop/hdaps-gl >> /etc/portage/package.keywords/thinkpad</pre>}}
+
+===Sound===
+
+Enabling sound is easy.
+Note that today, where all modern hardware used Intel HD Audio, there's no point in building it as a module for dynamically probing.
+No problems with the power-saving feature so far.
+
+{{Kernel|Sound kernel config|<pre>
+Device Drivers  --->
+     <*> Sound card support  --->
+     <*>   Advanced Linux Sound Architecture  --->
+     [*]   PCI sound devices  --->
+     <*>   Intel HD Audio
+     [*]     Build Conexant HD-audio codec support
+     [*]     Aggressive power-saving on HD-audio
+     (60)      Default time-out for HD-audio power-save mode
+</pre>}}
+
+===CardBus/ExpressCard===
+
+The ThinkPad W500 has a yenta compatible CardBus bridge in it.
+
+{{Kernel|CardBus kernel config|<pre>
+Bus options (PCI etc.)  --->
+     <*> PCCard (PCMCIA/CardBus) support  --->
+     <*>   CardBus yenta-compatible bridge support
+</pre>}}
+
+===MMC/SD/MS/xD card reader===
+
+Apparently there is good support for MMC and SD, however there seems not to be a driver for the MemoryStick chip, apparently the two drivers available on 2.6.28 don't detect it. There's no support at all for xD.
+
+{{Kernel|MMC/SD kernel config|<pre>
+Device Drivers  --->
+     <M> MMC/SD card support  --->
+     <M>   MMC block device driver
+     <M>   Secure Digital Host Controller Interface support
+     <M>     SDHCI support on PCI bus
+     <M> Sony MemoryStick card support (EXPERIMENTAL)  --->
+     <M>   MemoryStick Pro block device driver
+     < >   TI Flash Media MemoryStick Interface support  (EXPERIMENTAL)
+     < >   JMicron JMB38X MemoryStick interface support (EXPERIMENTAL)
+</pre>}}
+
+===SMBus===
+
+SMBus is a system for passing system management signals through the I2C bus.
+It is mostly used for gathering information about motherboard peripherals such as temperatures and fan speeds.
+
+{{Kernel|SMBus kernel config|<pre>
+Device Drivers  --->
+     {*} I2C support  --->
+           I2C Hardware Bus support  --->
+     <*> Intel 82801 (ICH)
+</pre>}}
+
+===Turning devices on and off===
+
+Information is wanted on how do things hot plug on these ThinkPads.
+There's turning off the DVD drive, unplugging, hot plugging hard disks, maybe the docking station, etc.
+We wish to know how to use these things get hot plugged, ACPI hot plug? PCIe hot plug?
+
+{{Kernel|Hotplug kernel config|<pre>
+Bus options (PCI etc.)  --->
+     <*> Support for PCI Hotplug  --->
+     <*>   ACPI PCI Hotplug driver
+</pre>}}
+
+
+=== iTPM ===
+
+The intel integrated TPM is compatible with the TCG TIS 1.2 TPM specifications so you need provide kernel support.
+
+{{Kernel|Trusted Platform Module kernel config|<pre>
+Device Drivers  --->
+     Character device  --->
+          <M>   TPM Hardware support  --->
+          <M>   TPM Interface Specification 1.2 Interface
+</pre>}}
+
+The current ''tpm_tis'' does not work directly with iTPM (using PNP to find the chip) because the _HID is non standard and the returned TIS status is incorrect (see [http://sourceforge.net/mailarchive/message.php?msg_name=200811280943427180885%40gmail.com tpmdd mailing list] and [https://www.grounation.org/index.php?post/2008/07/04/8-how-to-use-a-tpm-with-linux grounation blog] for a discussion). Below is an '''experimental''' patch to ''tpm_tis'', getting it to work (thanks Colin Didier for putting in a diff file and much thanks to Seiji Munetoh and the tpmdd mailing list):
+
+{{File|itpm.diff|<pre>
+--- drivers/char/tpm/tpm_tis.c.orig	2009-02-02 14:42:32.000000000 +0900
++++ drivers/char/tpm/tpm_tis.c	2009-02-02 18:12:12.000000000 +0900
+@@ -293,7 +293,7 @@
+ 		wait_for_stat(chip, TPM_STS_VALID, chip->vendor.timeout_c,
+ 			      &chip->vendor.int_queue);
+ 		status = tpm_tis_status(chip);
+-		if ((status & TPM_STS_DATA_EXPECT) == 0) {
++		if ((status & TPM_STS_VALID) == 0) {
+ 			rc = -EIO;
+ 			goto out_err;
+ 		}
+@@ -430,7 +430,7 @@
+ 	return IRQ_HANDLED;
+ }
+ 
+-static int interrupts = 1;
++static int interrupts = 0;
+ module_param(interrupts, bool, 0444);
+ MODULE_PARM_DESC(interrupts, "Enable interrupts");
+ 
+@@ -450,19 +450,19 @@
+ 		goto out_err;
+ 	}
+ 
+-	if (request_locality(chip, 0) != 0) {
+-		rc = -ENODEV;
+-		goto out_err;
+-	}
+-
+-	vendor = ioread32(chip->vendor.iobase + TPM_DID_VID(0));
+-
+ 	/* Default timeouts */
+ 	chip->vendor.timeout_a = msecs_to_jiffies(TIS_SHORT_TIMEOUT);
+ 	chip->vendor.timeout_b = msecs_to_jiffies(TIS_LONG_TIMEOUT);
+ 	chip->vendor.timeout_c = msecs_to_jiffies(TIS_SHORT_TIMEOUT);
+ 	chip->vendor.timeout_d = msecs_to_jiffies(TIS_SHORT_TIMEOUT);
+ 
++	if (request_locality(chip, 0) != 0) { 
++		rc = -ENODEV;
++		goto out_err;
++	}
++
++	vendor = ioread32(chip->vendor.iobase + TPM_DID_VID(0));
++
+ 	dev_info(dev,
+ 		 "1.2 TPM (device-id 0x%X, rev-id %d)\n",
+ 		 vendor >> 16, ioread8(chip->vendor.iobase + TPM_RID(0)));
+@@ -652,7 +652,7 @@
+ 
+ static struct platform_device *pdev;
+ 
+-static int force;
++static int force = 1;
+ module_param(force, bool, 0444);
+ MODULE_PARM_DESC(force, "Force device probe rather than using ACPI entry");
+ static int __init init_tis(void)
+
+</pre>}}
+To use the TPM load ''tpm_bios'', ''tpm'' and ''tpm_tis''. Finally emerge [http://trousers.sourceforge.net/ trousers] for a TSS.
+
+=== Touchpad ===
+Touchpad works out of the box but often, when typing, one needs to swith it off.
+For this you need normal synaptics tools (see syndaemon, synclient). This is however not enough, since Thinkpads have Trackpoint and its 3 buttons which wouldn't be switched off this way - you need to use xinput. Example code would be:
+
+<pre>
+#switch off only tapping  and  scrolling; daemonize
+syndaemon -d -t
+#switch touchpad completely
+synclient TouchPadOff=1
+#switch the even trackpoint device
+xinput set-int-prop "TPPS/2 IBM TrackPoint" "Device Enabled" 8 0
+</pre>
+
+===Devices left out===
+
+Some devices still appear on lspci as not being connected to any driver.
+WiMAX? Where's the TPM chip?
+The ones from Ricoh are from the card reader.
+Here's the list:
+
+<pre>
+00:03.0 Communication controller: Intel Corporation Device 2a44 (rev 07)
+        Subsystem: Lenovo Device 20e6
+        Flags: bus master, fast devsel, latency 0, IRQ 11
+        Memory at fc226800 (64-bit, non-prefetchable) [size=16]
+        Capabilities: [50] Power Management version 3
+        Capabilities: [8c] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 Enable-
+
+00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev 93) (prog-if 01 [Subtractive decode])
+        Flags: bus master, fast devsel, latency 0
+        Bus: primary=00, secondary=15, subordinate=18, sec-latency=32
+        I/O behind bridge: 00005000-00008fff
+        Memory behind bridge: f4300000-f7ffffff
+        Prefetchable memory behind bridge: 00000000f0000000-00000000f3ffffff
+        Capabilities: [50] Subsystem: Lenovo Device 20f4
+
+00:1f.0 ISA bridge: Intel Corporation Device 2917 (rev 03)
+        Subsystem: Lenovo Device 20f5
+        Flags: bus master, medium devsel, latency 0
+        Capabilities: [e0] Vendor Specific Information <?>
+
+15:00.3 System peripheral: Ricoh Co Ltd Device 0843 (rev 11)
+        Subsystem: Lenovo Device 20c9
+        Flags: bus master, medium devsel, latency 32, IRQ 11
+        Memory at f4301c00 (32-bit, non-prefetchable) [size=256]
+        Capabilities: [80] Power Management version 2
+
+15:00.4 System peripheral: Ricoh Co Ltd R5C592 Memory Stick Bus Host Adapter (rev 11)
+        Subsystem: Lenovo Device 20ca
+        Flags: bus master, medium devsel, latency 32, IRQ 11
+        Memory at f4302000 (32-bit, non-prefetchable) [size=256]
+        Capabilities: [80] Power Management version 2
+
+15:00.5 System peripheral: Ricoh Co Ltd xD-Picture Card Controller (rev 11)
+        Subsystem: Lenovo Device 20cb
+        Flags: bus master, medium devsel, latency 32, IRQ 11
+        Memory at f4302400 (32-bit, non-prefetchable) [size=256]
+        Capabilities: [80] Power Management version 2
+</pre>
+
+The fingerprint reader can be found on the USB bus using lsusb:
+
+<pre>
+Bus 004 Device 002: ID 08ff:2810 AuthenTec, Inc. 
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass          255 Vendor Specific Class
+  bDeviceSubClass       255 Vendor Specific Subclass
+  bDeviceProtocol       255 Vendor Specific Protocol
+  bMaxPacketSize0         8
+  idVendor           0x08ff AuthenTec, Inc.
+  idProduct          0x2810 
+  bcdDevice           17.03
+  iManufacturer           0 
+  iProduct                1 Fingerprint Sensor
+  iSerial                 0 
+  bNumConfigurations      1
+</pre>
+
+==Links==
+* [[Fglrx|ATI Catalyst drivers]]
+* [[Radeon|Radeon Xorg driver]]
+* [[Intel_GMA|Intel GMA drivers]]
+* [[Iwlwifi|Intel WiFi Link drivers]]
+* [[Synaptics_Touchpad|Synaptics touchpad]]
+* [http://www.gentoo.org/doc/en/power-management-guide.xml Gentoo Power Management Guide]
+* [[Lenovo Thinkpad T61]]
+* [[Lenovo Thinkpad T61p]]
+* [http://wiki.archlinux.org/index.php/Lenovo_ThinkPad_T400 ThinkPad T400 on ArchWiki]
+* [http://www.thinkwiki.org/wiki/Category:T400 ThinkWiki page on ThinkPad T400 laptop]
+* [http://www.thinkwiki.org/wiki/Category:T500 ThinkWiki page on ThinkPad T500laptop]
+* [http://www.thinkwiki.org/wiki/Category:W500 ThinkWiki page on ThinkPad W500 laptop]
+* [http://www.thinkwiki.org/wiki/Category:W700 ThinkWiki page on ThinkPad W700 laptop]
+* [http://www.linlap.com/wiki/lenovo+thinkpad+t400 linlap page on Thinkpad T400laptop]
+* [http://www.linlap.com/wiki/lenovo+thinkpad+t500 linlap page on Thinkpad T500laptop]
+* [http://www.linlap.com/wiki/lenovo+thinkpad+w500 linlap page on Thinkpad W500laptop]
+
+[[Category:Lenovo Laptops]]

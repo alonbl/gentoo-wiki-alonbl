@@ -1,0 +1,151 @@
+= Gentoo Bootstrap =
+
+This is my quick guide for bootstrapping Gentoo installation.
+
+== Startup ==
+
+Boot from latest Gentoo install CD.
+
+=== Networking ===
+
+Make sure you have working network before start.
+
+Create /etc/init.d/net.eth0 if not exist (recent install CDs dropped this for some reason):
+{{Root|ln -s net.lo /etc/conf.d/net.eth0}}
+
+{{Root|/etc/init.d/net.eth0 start}}
+
+=== Time ===
+
+Very important to setup correct date/time so future makes will not break.
+
+{{Root|ntpdate -u pool.ntp.org}}
+
+=== Partitions ===
+
+{{Root|fdisk /dev/sda}}
+
+* Partition 1 ~50M bootable.
+* Partition 2 2*RAM_SIZE.
+* Partition 3 all the rest.
+
+=== Create state3 ===
+
+{{Root|mkfs -t ext2 /dev/sda1}}
+{{Root|mkfs -t ext4 /dev/sda3}}
+{{Root|mkswap /dev/sda2}}
+{{Root|mount /dev/sda3 /mnt/gentoo}}
+{{Root|mkdir /mnt/gentoo/boot}}
+{{Root|mount /dev/sda1 /mnt/gentoo/boot}}
+{{Root|cd /mnt/gentoo}}
+{{Root|wget @STATE3@}}
+{{Root|wget @PORTAGE_LATEST@}}
+{{Root|tar -xpf @STAGE3@}}
+{{Root|mkdir var/gentoo}}
+{{Root|tar -C var/gentoo -xpf @PORTAGE-LATEST@}}
+{{Root|rm @STATE3@ @PORTAGE_LATEST@}}
+{{Root|cd /}}
+{{Root|mount -t proc none /mnt/gentoo/proc}}
+{{Root|cp /etc/resolv.conf /mnt/gentoo/etc}}
+{{Root|chroot /mnt/gentoo /bin/bash}}
+{{Root|env-update}}
+
+== Initial settings ==
+
+{{Root|passwd}}
+{{Root|rm /etc/make.profile}}
+{{Root|ln -s ../var/gentoo/portage/profiles/default/linux/amd64/10.0/no-multilib \
+        /etc/make.profile}}
+
+{{File|/etc/make.conf|<pre>
+CHOST="x86_64-pc-linux-gnu"
+CFLAGS="-O2 -march=native -fomit-frame-pointer -pipe"
+CXXFLAGS="${CFLAGS}"
+MAKEOPTS="-j3"
+PORTDIR="/var/gentoo/portage"
+DISTDIR="/var/gentoo/distfiles"
+PKGDIR="/var/gentoo/packages"
+USE="${USE} -gnome -qt3 -handbook"
+USE="${USE} -cxx nocxx -ruby -perl -fortran -python -lua -java"
+USE="${USE} -berkdb -gdbm -hal -branding"
+</pre>}}
+
+{{File|/etc/portage/package.use|<pre>
+sys-devel/gcc cxx -nocxx
+</pre>}}
+
+Update:
+* /etc/fstab
+* /etc/locale.gen
+* /etc/conf.d/hostname
+* /etc/localtime - copy correct file from /usr/share/zoneinfo
+
+== Update ==
+
+{{Root|emerge --update --deep --newuse @world}}
+{{Root|etc-update}}
+{{Root|emerge --depclean}}
+{{Root|emerge gentoolkit}}
+{{Root|revdep-rebuild}}
+{{Root|python-updater}}
+{{Root|perl-cleaner --all}}
+{{Root|emerge --depclean}}
+{{Root|revdep-rebuild}}
+
+== Cleanup ==
+
+{{Root|rm -fr /lib32/* /usr/lib32/locale}}
+
+== Base system ==
+
+{{Root|<nowiki>emerge app-admin/syslog-ng net-dns/openresolv app-portage/gentoolkit app-editors/vim \
+        net-misc/dhcpcd sys-apps/ifplugd sys-apps/iproute2 sys-apps/less sys-boot/syslinux net-misc/ntp\
+        sys-kernel/genkernel sys-kernel/gentoo-sources sys-process/vixie-cron \
+        app-admin/logrotate app-admin/sudo net-firewall/firehol sys-power/acpid</nowiki>}}
+
+== Kernel & Bootloader ==
+
+{{Root|<nowiki>genkernel --menuconfig --kernel-config=/etc/kernels/BASE_KERNEL_CONFIG all</nowiki>}}
+
+See: [[User:Alonbl/Linux_Configuration_Common]]
+
+{{Root|extlinux --install /boot}}
+{{Root|cat /usr/share/syslinux/mbr.bin > /dev/sda}}
+{{Root|cp /usr/share/syslinux/menu.c32 /boot}}
+
+Update extlinux.conf see [[Syslinux_Bootloader]].
+
+== Finalize ==
+
+{{Root|rc-update add sshd default}}
+{{Root|rc-update add ntpd default}}
+{{Root|rc-update add syslog-ng default}}
+{{Root|rc-update add vixie-cron default}}
+{{Root|rc-update add acpid default}}
+
+Update:
+{{File|/etc/rc.conf|<pre>
+rc_hotplug="*"
+</pre>}}
+
+== Close up ==
+
+{{Root|exit}}
+{{Root|umount /mnt/gentoo/proc /mnt/gentoo/boot /mnt/gentoo}}
+{{Root|reboot}}
+
+== Configure system ==
+
+* [[User:Alonbl/Gentoo_Licensing]]
+* [[Secured_Portage_Sync]]
+* [[Firewall_Using_Firehol]]
+
+== Success! ==
+
+You have working Gentoo base.
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-28|type=original}}}}

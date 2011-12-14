@@ -1,0 +1,362 @@
+= Alon Bar-Lev's Gentoo Workstation =
+
+I maintain a complex development workstation, there is some value in documenting it for other people to take what they like.
+
+As a base, I use [[User:Alonbl/Gentoo_Bootstrap|Bootstrap]] and [[User:Alonbl/Gentoo_Configuration_Common|Gentoo Configuration]].
+
+== Kernel ==
+
+I use [[User:Alonbl/Linux_Configuration_Common|minimal]] module (when possible) kernel with {{Package|media-gfx/splashutils}}.
+I use [[Fbsplash|splashutils]] because it makes the acceptance of Linux better for people that experiencing it at first.
+
+Device specific configuration can be found at any of my [[User:Alonbl/Index#Hardware|hardware article]].
+
+To compile kernel, I use [http://alon.barlev.googlepages.com genkernel-utils] which uses genkernel and ease
+[[Linux_Disk_Encryption_Using_LoopAES_And_SmartCards|disk encryption]] initramfs configuration, and allow stable
+and none stable configuration to co-exist.
+
+== Hardware ==
+
+See [[User:Alonbl/Index#Hardware|hardware articles]].
+
+== Networking ==
+
+I integrate networking as much as I can with OpenRC.
+
+The following articles document my configuration:
+* [[openresolv]]
+* [[Stealth_DHCP]]
+* [[Firewall_Using_Firehol]]
+* [[OpenVPN_Non_Root]]
+* [[VM_Tap_Networking]]
+* [[PPP_Client]]
+* [[PPPoE_Client]]
+
+Workstation is a complete network:
+
+
+             +-----------------------------------------------+
+             |                    INTERNET                   |
+             +-----------------------------------------------+
+               ^          ^          ^          ^          ^
+               |          |          |          |          |
+               |          |          |          |          |
+               |          |          |          |          |
+            GSM modem  Broadband   GSM modem  wired     wireless
+               |          |          |          |          |
+              ppp0       ppp1       ppp2       eth0       wlan0
+               |          |          |          |          |
+             +-----------------------------------------------+
+             |               \\ | //                 \\ | // |
+             |                 NAT     WORKSTATION     NAT   |
+             |                    ^                      ^   |
+             |  /-----NAT--<-----\ \                      \  |
+             +-----------------------------------------------+
+               |                     |                     |
+              vpn0                  br0                   usb0
+               |                     |                     |
+               |                +----+----+                |
+               |                |         |                |
+               V               vm0       vm1               V
+             OFFICE             |         |             EMBEDDED
+                              QEMU1     QEMU2
+
+In words, workstation connects to the Internet via multiple coice of interfaces. It also provides
+access to the Internet for embedded devices and virtual machines via NAT. DHCP is made using special
+[[Stealth_DHCP|mode]] which hides computer indentity from DHCP server.
+
+The virtual machines resides in their [[VM_Tap_Networking|own segment]] interacting with workstaion via br0 interface.
+
+There is also VPN using [[OpenVPN_Non_Root|OpenVPN non root mode]] to office network, virtual machines can access this network via NAT.
+
+All interfaces are protected by [[Firewall_Using_Firehol|firewall]].
+
+To enable user wpa_supplicant access, I use the following:
+{{File|/etc/wpa_supplicant/wpa_supplicant.conf|<pre>
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=myusers
+</pre>}}
+
+As usually only wireless networking is working, we would like to switch off the wired and boardband interfaces, set the following:
+{{File|/etc/rc.conf|<pre>
+rc_hotplug="!net.eth0 !net.ppp0"
+</pre>}}
+
+== Security ==
+
+On most of my mobile devices I [[Linux_Disk_Encryption_Using_LoopAES_And_SmartCards|encrypt]] the disk
+using {{Package|sys-fs/loop-aes}} which is the most strong and fast cryptographic method I found. I use
+{{Package|dev-libs/opensc}} compliant smartcard with CCID compliant reader using {{Package|dev-libs/openct}}.
+
+I do not use {{Package|sys-apps/pcsc-lite}} as it is too complex, consume power as it busy loops, and does
+not run in least privileged mode.
+
+I use [[Firewall_Using_Firehol|firewall]] for all of my interfaces, with outgoing and incoming traffic rules.
+
+To avoid man-in-the-middle attacks on portage synchronization, I always use [[Secured_Portage_Sync|signed snapshots]].
+
+== Power Management ==
+
+I use [[Userspace_software_suspend|Usermode suspend]], with {{Package|sys-power/hibernate-script}} as wrapper, and
+{{Package|sys-power/acpid}} as event managemet.
+
+[[USB_Power_Saving|USB power]] down extends battery life, as long as it works, I use it.
+
+== Gentoo Configuration ==
+
+Based on [[User:Alonbl/Gentoo_Configuration_Common|Gentoo common configuration]].
+
+{{File|/etc/make.conf|<pre>
+USE="${USE} bluetooth alsa joystick"
+USE="${USE} kde qt4 plasma X xv xinerama opengl"
+USE="${USE} jpeg jpeg2k tiff png svg"
+USE="${USE} mp3 ogg vorbis mpeg"
+USE="${USE} bidi"
+USE="${USE} lzma"
+USE="${USE} samba kerberos logrotate vim-syntax"
+
+INPUT_DEVICES="evdev"
+VIDEO_CARDS="intel"
+LINGUAS="en he"
+
+PORTDIR_OVERLAY="/usr/local/portage/local /usr/local/portage/alon-barlev-portage ${PORTDIR_OVERLAY}"
+</pre>}}
+
+{{File|/etc/make.profile|<pre>
+->../var/gentoo/portage/profiles/default/linux/amd64/10.0/no-multilib
+</pre>}}
+
+Licenses: [[User:Alonbl/Gentoo_Licensing]]
+
+=== Important USE flags ===
+
+{{File|/etc/portage/package.use/my-system.conf|<pre>
+app-laptop/tp_smapi hdaps
+app-crypt/aespipe static
+sys-apps/loop-aes-losetup static
+dev-libs/opensc -pcsc-lite openct doc
+dev-libs/pkcs11-helper doc
+media-gfx/splashutils mng fbcondecor
+sys-apps/hal -crypt
+sys-fs/loop-aes keyscrub
+sys-fs/ntfsprogs -crypt
+sys-power/suspend fbsplash -crypt threads
+sys-auth/pambase consolekit # kde
+sys-auth/pambase -kerberos
+sys-apps/portage python3
+</pre>}}
+
+{{File|/etc/portage/package.use/my-applications|<pre>
+app-cdr/k3b ffmpeg dvd encode mad lame
+app-text/poppler cairo # gimp
+media-gfx/gimp gimpprint svg wmf pdf
+app-office/libreoffice java
+media-video/transcode a52 aac dvd
+virtual/ffmpeg encode
+media-video/ffmpeg aac a52 dts v4l xvid
+media-video/vlc dbus ffmpeg aac a52 aalib taglib v4l truetype cdda cddax cddb cdio dvd encode rtsp live ogmusepack wma-fixed flac x264
+media-gfx/ufraw exif lensfun hotpixels contrast gtk gimp
+www-client/firefox libnotify system-sqlite
+dev-db/sqlite secure-delete unlock-notify # firefox
+x11-drivers/xf86-video-intel sna
+</pre>}}
+
+{{File|/etc/portage/package.use/my-network.conf|<pre>
+net-misc/openssh -ldap X509
+net-misc/openvpn iproute2 pkcs11
+net-print/cups ppds
+net-analyzer/wireshark gtk
+net-dialup/rp-pppoe -X
+net-fs/samba ads ldap
+</pre>}}
+
+=== Always none stable ===
+
+ sys-kernel/gentoo-sources ~amd64
+ sys-kernel/genkernel ~amd64          # I use recent kernel
+ app-emulation/qemu-kvm ~amd64        # I use recent kernel
+ media-gfx/splashutils ~amd64         # I use recent kernel
+ sys-fs/loop-aes ~amd64               # I use recent kernel
+ x11-drivers/xf86-video-intel ~amd64  # so far acceleration is not right
+
+== Localization ==
+
+[[Hebrew]].
+
+== udev ==
+
+Until https://bugs.launchpad.net/qemu/+bug/891625 resolved:
+
+{{File|/etc/udev/rules.d/60-kvm.rules|<pre>
+KERNEL=="vhost-net",GROUP="kvm"
+</pre>}}
+
+== Desktop ==
+
+=== X11 ===
+
+I use only evdev input driver, without HAL or any other automation.
+
+{{File|/etc/X11/xorg.conf|<pre>
+Section "dri"
+        Group           0
+        Mode            0666
+EndSection
+
+Section "ServerLayout"
+        Identifier     "Default"
+        Screen      0  "Screen0" 0 0
+        InputDevice    "Mouse0" "CorePointer"
+        InputDevice    "Keyboard0" "CoreKeyboard"
+EndSection
+
+Section "ServerFlags"
+        Option  "blank time"    "10"    # 10 minutes
+        Option  "standby time"  "20"
+        Option  "suspend time"  "30"
+        Option  "off time"      "60"
+
+#       Option  "Xinerama"      "on"
+
+        Option  "DefaultServerLayout"   "Default"
+
+        # xorg.bug#17925
+        Option  "AutoAddDevices"        "false"
+EndSection
+
+Section "Extensions"
+        Option          "Composite"     "Enable"
+EndSection
+
+Section "InputDevice"
+        Identifier      "Keyboard0"
+        Driver          "evdev"
+        Option          "Device"        "/dev/input/by-path/platform-i8042-serio-0-event-kbd"
+EndSection
+
+Section "InputDevice"
+        Identifier      "Mouse0"
+        Driver          "evdev"
+        Option          "Device"        "/dev/input/by-path/platform-i8042-serio-2-event-mouse"
+
+        # Require for scroll
+        Option          "Buttons"               "3"
+        Option          "EmulateWheel"
+        Option          "EmulateWheelButton"    "2"
+EndSection
+
+Section "Monitor"
+        Identifier   "Monitor0"
+EndSection
+
+Section "Device"
+        Identifier  "Card0"
+        Driver      "intel"
+        VendorName  "Intel Corporation"
+        BoardName   "Mobile 4 Series Chipset Integrated Graphics Controller"
+        BusID       "PCI:0:2:0"
+EndSection
+
+Section "Screen"
+        Identifier "Screen0"
+        Device     "Card0"
+        Monitor    "Monitor0"
+
+        # the following enables setting 2nd screen
+        # on left/right top/bottom using xrandr.
+        SubSection "Display"
+                Viewport   0 0
+                Depth     24
+                Virtual         4000 4000
+        EndSubSection
+EndSection
+</pre>}}
+
+=== KDE ===
+
+I use KDE as my desktop, why? I do not understand gnome, and Qt looks right, including proper [[Hebrew]] support.
+
+I use the following packages:
+ kde-base/kdebase-startkde
+ kde-base/ark
+ kde-base/dolphin
+ kde-base/kfind
+ kde-base/kate
+ kde-base/kcalc
+ kde-base/kcharselect
+ kde-base/kde-l10n
+ kde-base/kdesdk-kioslaves
+ kde-base/kdm
+ kde-base/kget
+ kde-base/kmenuedit
+ kde-base/kmix
+ kde-base/kolourpaint
+ kde-base/konqueror
+ kde-base/konsole
+ kde-base/kscreensaver
+ kde-base/ksnapshot
+ kde-base/okular
+ kde-base/kopete
+ media-libs/phonon-vlc
+ net-misc/knemo
+
+{{File|/etc/portage/package.use/kde.conf|<pre>
+kde-base/kwin xcomposite
+kde-base/kdelibs spell udisks
+kde-base/krdc vnc
+media-libs/phonon vlc
+x11-libs/qt-opengl qt3support
+x11-libs/qt-declarative qt3support
+x11-libs/qt-gui qt3support dbus mng # bluetooth
+x11-libs/qt-sql qt3support
+x11-libs/qt-core qt3support
+sys-block/parted device-mapper # kde
+sys-auth/consolekit policykit # kde
+</pre>}}
+
+To enable gtk+ (firefox, gimp, wireshark...) integration to Qt:
+
+{{Root|emerge x11-themes/oxygen-gtk}}
+
+{{File|~/.gtkrc-2.0|<pre>
+include "/usr/share/themes/oxygen-gtk/gtk-2.0/gtkrc"
+style "user-font"
+{
+        font_name="Sans Serif"
+}
+widget_class "*" style "user-font"
+
+gtk-theme-name="oxygen-gtk"
+gtk-font-name="Sans Serif 8"
+</pre>}}
+
+{{Command|ln -s .gtkrc-2.0 ~/.gtkrc-2.0-kde}}
+
+== Qemu ==
+
+I use kvm
+
+{{File|/etc/conf.d/modules|<pre>
+modules="${modules} kvm-intel vhost-net"
+</pre>}}
+
+{{File|q|<pre>
+#!/bin/sh
+
+export SPICE_DEBUG_ALLOW_MC=1
+qemu-system-x86_64 \
+        -no-quit \
+        -drive file=disk1.img \
+        -net nic -net tap,ifname=vm0,script=/bin/true,vhost=on \
+        -m 512 \
+        -monitor tcp:127.0.0.1:4445,server,nowait \
+        -localtime \
+        -usbdevice tablet \
+        -spice port=4446,disable-ticketing \
+        -vnc 127.0.0.1:0
+</pre>}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-12-02|type=original}}}}

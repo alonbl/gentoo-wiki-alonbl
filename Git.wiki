@@ -1,0 +1,141 @@
+== Introduction ==
+
+[http://git-scm.com/ Git] is a version control system. It is used for keeping track of changes made to source code, etc.
+The changes are often made by different people, though this is not necessary.
+Similar tools include CVS, [[Subversion]], Mercurial, or Bazaar.
+Git is distributed source control management system, which means it does not require a central repository.
+Git can and often is used with a central repository workflow, though.
+
+Git was originally developed by Linus Torvalds and friends for managing development of the Linux kernel.
+It is relatively new, though many large projects have adopted it.
+
+== Installation ==
+
+{{Root|emerge --ask --verbose dev-vcs/git}}
+
+This will install both a client and a server (disabled by default).
+
+If you want to use gitk (visualisation tool), you should enable USE-Flag tk for dev-vcs/git.
+
+
+== Client Usage ==
+
+* Watch the presentation by Randal Schwartz: [http://video.google.com/videoplay?docid=-3999952944619245780].
+* Git is documented through extensive man pages, which are replicated online. Go through the man pages: [http://www.kernel.org/pub/software/scm/git/ docs/].
+* Go through the everyday Git docs: [http://www.kernel.org/pub/software/scm/git/docs/everyday.html].
+
+
+== Setting up a network Server ==
+
+This is how to set up a server which serves read-only content.
+
+In order to set up a server, the default location for repositories is '''/var/git'''.
+Here is the simplest way to do it.
+
+=== Server configuration file ===
+
+Make your git-daemon configuration file (in /etc/conf.d) look like this:
+
+{{File|/etc/conf.d/git-daemon|<pre>
+<nowiki># conf.d file for git-daemon
+#
+# Please check man 1 git-daemon for more information about the options
+# git-daemon accepts. You MUST edit this to include your repositories you wish
+# to serve.
+#
+# Some of the meaningful options are:
+#   --syslog      --- Enables syslog logging
+#   --verbose     --- Enables verbose logging
+#   --export-all  --- Exports all repositories
+#   --port=XXXX   --- Starts in port XXXX instead of 9418
+#
+GITDAEMON_OPTS="--syslog --enable=receive-pack --export-all --base-path=/var/git /var/git"
+
+# To run an anonymous git safely, the following user should be able to only
+# read your Git repositories. It should not able able to write to anywhere on
+# your system, esp. not the repositories.
+GIT_USER="nobody"
+GIT_GROUP="nobody"
+</nowiki></pre>
+}}
+
+What that does:
+* Makes the "jail root" /var/git by specifying that at the end.
+* Allows anything that looks like a repository to be exportable with the --export-all option. If you want more limitation, please remove this option and touch a file named git-daemon-export-ok
+* Creates "virtual resources" of any repositories exported, by making the jail root prepended to all requests (git://server/blah looks for /var/git/blah).
+* It should be noticed that all the repositories have write access to all the world. Use the --enable=receive-pack carefully only in trusted LAN
+
+Check if the /var/git directory exists (otherwise git will not start). If not
+
+{{Root|mkdir /var/git
+chown nobody.nobody /var/git}}
+
+Then start the daemon:
+
+{{Root|/etc/init.d/git-daemon start}}
+
+For some reason, it may take once or twice (it will error with '''!!''' instead of '''OK''').
+
+=== Setting up repositories ===
+
+First, the daemon will be run as nobody, so become nobody:
+
+{{Root|sudo -u nobody -s}}
+
+And execute all further commands in that shell.
+
+First, create a project directory inside of the daemon's root directory (thought of as a jail root):
+
+{{Command|<nowiki>cd /var/git
+mkdir myproject</nowiki>}}
+
+Next, put all the files in there. This is the directory which will be cloned ("checked out" in more centralized terminology).
+
+Finally, make it into a GIT repository: {{Command|git init}}
+
+If you have multiple projects, create one directory for each according to the above steps.
+
+If clients wish to check out the project, tell them to run:
+
+{{Command|git clone git://your-server.com/path/to/myproject localdir}}
+
+== Multi User Git Server ==
+
+When pushing into Git server using ssh, the ownership of the new files are associated with the user who performs the push.
+This does not allow other users to use the same repository. One solution is to change the default umask of a user, however,
+this will effect more than the Git operations.
+
+A proper solution can be established using POSIX access control lists.
+
+Enable ACLs in kernel, for example for ext4 filesystem, use:
+{{Kernel||<pre>
+    File systems  --->
+      <*> The Extended 4 (ext4) filesystem
+      [*]   Ext4 extended attributes
+      [*]     Ext4 POSIX Access Control Lists
+</pre>}}
+
+Add "acl" to mount options:
+{{File|/etc/fstab|<pre>
+/dev/sda3               /               ext4            noatime,acl 0 1
+</pre>}}
+
+Create gitusers group:
+{{Root|groupadd gitusers}}
+
+For each Git repository REPOS:
+{{Root|find "${REPOS}" -type d | xargs setfacl -R -m d:g:gitusers:rwX}}
+{{Root|setfacl -R -m g:gitusers:rwX "${REPOS}"}}
+
+The above will set default read and write access to gitusers groups for every file created within repository.
+
+Now members of gitusers group can push/pull repository.
+
+== See Also ==
+* [[gitosis]]
+* [http://scie.nti.st/2007/11/14/hosting-git-repositories-the-easy-and-secure-way Hosting Git repositories using gitosis]
+
+[[Category:Revision Control Systems]]
+
+[[pl:Git]]
+[[tr:Git]]

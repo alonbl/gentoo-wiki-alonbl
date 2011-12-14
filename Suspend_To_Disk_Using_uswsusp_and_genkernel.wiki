@@ -1,0 +1,134 @@
+{{MergeTo|[[Userspace software suspend]]}}
+
+{{Package|sys-power/suspend}} aka uswsusp is the mainline suspend/resume solution. It contain both s2ram (suspend to RAM) and s2disk (suspend to disk aka hibernate). The problem is that Genkernel developers ignores the need to use suspend properly see {{Bug|156445|303533}}.
+
+== Preparations ==
+
+{{Kernel||<pre>
+  General setup  --->
+    [*] Initial RAM filesystem and RAM disk (initramfs/initrd) support
+  Power management and ACPI options  --->
+    [*] Suspend to RAM and standby
+    [*] Hibernation (aka 'suspend to disk')
+    [*] ACPI (Advanced Configuration and Power Interface) Support  --->
+      -*-   Button
+</pre>}}
+
+Assuming swap partition is at /dev/sda2:
+{{File|/etc/suspend.conf|<pre>
+snapshot device = /dev/snapshot
+resume device = /dev/sda2
+compute checksum = y
+compress = y
+</pre>}}
+
+{{Root|cp /usr/share/genkernel/defaults/linuxrc /usr/share/genkernel/defaults/linuxrc.uswsusp}}
+Modify:
+{{File|/usr/share/genkernel/defaults/linuxrc.uswsusp|<pre>
+ #!/bin/sh
+ 
+ . /etc/initrd.defaults
+ . /etc/initrd.scripts
++swsusp_resume() {
++    /sbin/resume
++}
+ splash() {
+</pre>}}
+{{Root|mkdir -p /var/lib/genkernel/overlay/etc /var/lib/genkernel/overlay/sbin}}
+{{Root|cp /etc/suspend.conf /var/lib/genkernel/overlay/etc}}
+{{Root|cp /usr/lib/suspend/resume /var/lib/genkernel/overlay/sbin}}
+{{Root|<nowiki>genkernel --linuxrc=/usr/share/genkernel/defaults/linuxrc.uswsusp --initramfs-overlay=/var/lib/genkernel/overlay your_standard_parameters</nowiki>}}
+
+Basically it will use standard genkernel process with the patched linuxrc script and inject the resume utility and suspend.conf into the initramfs.
+
+== Test ==
+
+* Switch to text mode.
+* Run:
+{{Root|s2disk}}
+* Wait for computer to turn off.
+* Turn on computer.
+* After boot you should resume right after the s2disk.
+
+== Integrating splashutils ==
+
+uswsusp can show nice splash activity during suspend/resume.
+
+{{File|/etc/portage/package.use/suspend.conf|<pre>
+sys-power/suspend fbsplash
+</pre>}}
+
+Add:
+{{File|/etc/suspend.conf|<pre>
+splash = y
+</pre>}}
+
+Recreate the initramfs overlay with the new resume and suspend.conf.
+
+Run genkernel again now as splash enabled, and again.
+
+== Tweeks ==
+
+=== hibernate-script ===
+
+Suspending from graphical environment or within complex environment requires tweaking. There are two alternatives: [http://packages.gentoo.org/package/sys-power/hibernate-script sys-power/hibernate-script] and sys-power/pm-utils.
+
+I use the hibernate-script as it is simple and extensible framework.
+
+Modify:
+{{File|/etc/hibernate/common.conf|<pre>
+SaveClock yes             # this will save current system time into RTC when suspending.
+FBSplash on               # this will turn on splash during hibernate-script operation.
+Unmount /boot /mnt/tmp    # in case resume fails, or filesystem is accessed during boot, better to umount it cleanly before suspend.
+FullSpeedCPU yes          # perform suspend as fast as we can, even if we chose to save power on batteries for example.
+OnSuspend 55 sync         # execute command during suspend
+GentooModulesAutoload yes # hack for Gentoo
+SwitchToTextMode no       # save if you are using kernel mode switching
+</pre>}}
+
+Now you can suspend from anywhere, try:
+{{Root|hibernate}}
+
+=== acpid ===
+
+{{Root|emerge sys-apps/acpid}}
+{{Root|rc-update add acpid default}}
+
+The following will suspend to disk when sleep button is pressed, and suspend to RAM if power button is pressed or lid is closed, add:
+{{File|/etc/acpid/default.sh|<pre>
+         button)
+                 case "$action" in
++                        power)
++                                /usr/sbin/hibernate
++
++                        ;;
++                        lid)
++                                grep -q closed /proc/acpi/button/lid/LID/state && \
++                                        /usr/sbin/hibernate-ram
++                        ;;
++                        sleep)
++                                /usr/sbin/hibernate
++                        ;;
+</pre>}}
+
+== Suspend to RAM ==
+
+Suspend to RAM is more problematic than suspend to disk as it requires hardware support and cooperation. In most recent laptops it works correctly.
+
+Use the hibernate script, you may need to alter:
+{{File|ususpend-ram.conf|<pre>
+USuspendRamForce yes     # if hardware is unrecognized (most probably)
+USuspendRamAcpiSleep 3   # if you experiencing problem in waking up, also try 1 or 2
+</pre>}}
+
+{{Root|hibernate-ram}}
+
+If still not being able to wake up, try to play with other tweaks available in file.
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}
+
+[[Category:Power Management]]

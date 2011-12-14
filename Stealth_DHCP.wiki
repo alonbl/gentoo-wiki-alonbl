@@ -1,0 +1,30 @@
+When using DHCP as client your computer leaves traces of its mac address, hostname and even some uuid at hosting network.
+
+It is possible to leave lower mark.
+
+== Configuration ==
+
+{{Root|emerge net-analyzer/macchanger app-arch/sharutils}}
+
+Add:
+{{File|/etc/conf.d/net|<pre>
+my_name=`cat /dev/urandom | head --bytes 9 | uuencode -m - | head -n 2 | tail -n 1`
+
+preup() {
+        [ -f /var/lib/dhcpcd/dhcpcd.duid ] && rm /var/lib/dhcpcd/dhcpcd.duid
+        return 0
+}
+
+rc_need_eth0="firewall"     # optional, if you have firewall
+dhcp_eth0="release nontp nonis nosendhost"
+dhcpcd_eth0="-h ${my_name} -I ${my_name}"
+mac_eth0="random-samekind"
+</pre>}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}
+
+[[Category:Security]]

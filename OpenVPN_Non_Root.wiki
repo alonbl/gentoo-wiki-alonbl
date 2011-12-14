@@ -1,0 +1,124 @@
+= OpenVPN Client Non Root =
+
+End result, user can use own tool (I use knemo) to connect/disconnect from {{Package|net-misc/openvpn}}.
+
+The logic is to create tun device and allow users to access it, and wrapping the /sbin/ip
+using sudo.
+
+The control of the daemon is done using the OpenVPN management interface.
+
+== Setup ==
+
+{{Kernel|Add tap|<pre>
+  Device Drivers  ---> 
+    [*] Network device support  --->
+      <M>   Universal TUN/TAP device driver support
+</pre>}}
+
+{{Root|emerge net-misc/openvpn net-dns/openresolv}}
+
+{{Package|net-dns/openresolv}} is optional, but makes life much easier, see [[openresolv]].
+
+It is very recommended to configure firewall on your computer, see [[Firewall_Using_Firehol|firehol configuration]].
+
+{{File|~/openvpn/my-ip|<pre>
+#!/bin/sh
+sudo /sbin/ip $@
+</pre>}}
+
+{{File|~/openvpn/my-up.sh|<pre>
+#!/bin/sh
+script="${0//my-}"
+if [ ${EUID} != 0 ] ; then
+        if [[ -x /usr/bin/sudo ]] ; then
+                echo "" | sudo -p "" -S /etc/openvpn/"${script}" "$@"
+                exit $?
+        fi
+        echo "You need configure sudo to run $0" >&2
+        exit 1
+else
+        /etc/openvpn/"${script}" "$@"
+        exit $?
+fi
+</pre>}}
+
+{{Command|ln -s my-up.sh ~/openvpn/my-down.sh}}
+
+{{File|~/openvpn/server.conf|Add:<pre>
+dev-type tun
+dev vpn0
+daemon
+up my-up.sh
+down my-down.sh
+iproute my-ip
+up-delay
+up-restart
+down-pre
+script-security 2
+auth-retry nointeract
+management-signal
+management 127.0.0.1 2222
+management-query-passwords
+management-forget-disconnect
+remap-usr1 SIGTERM
+</pre>}}
+
+{{File|/etc/sudoers.d/openvpn|<pre>
+Defaults        env_keep += "foreign_option_1"
+Defaults        env_keep += "foreign_option_2"
+Defaults        env_keep += "foreign_option_3"
+Defaults        env_keep += "foreign_option_4"
+Defaults        env_keep += "foreign_option_5"
+Defaults        env_keep += "dev"
+
+%myusers ALL=(ALL) NOPASSWD: /etc/openvpn/up.sh
+%myusers ALL=(ALL) NOPASSWD: /etc/openvpn/down.sh
+%myusers ALL=(ALL) NOPASSWD: /sbin/ip
+</pre>}}
+
+Add:
+{{File|/etc/conf.d/net|<pre>
+rc_need_vpn0="firewall" # optional, if you setup firewall.
+rc_provide_vpn0="!net"
+tuntap_vpn0="tun"
+openvpn_vpn0="--group users"
+config_vpn0="null"
+txqueuelen_vpn0="100"
+metric_vpn0="1"
+</pre>}}
+
+{{Root|ln -s net.lo /etc/init.d/net.vpn0}}
+
+Until {{bug|391175}} is resolved, update the following to have DNS lookup of vpn0 be prioritized:
+{{File|/etc/resolvconf.conf|<pre>
+interface_order="lo lo[0-9]* vpn*"
+</pre>}}
+
+== Dialogs ==
+
+Fetch openvpn-kde-dialogs.pl from [[http://sites.google.com/site/alonbarlev/openvpn-pkcs11 here]], and customize.
+Usually comment out
+ #use MIME::Base64;
+ #use Crypt::X509;
+
+{{Root|emerge dev-perl/Net-Telnet}}
+
+== knemo ==
+
+=== Context menu ===
+
+Start:
+{{Command|( /usr/sbin/openvpn --cd /home/user/openvpn --config server.conf & ); exec /home/user/openvpn/openvpn-kde-dialogs.pl 2222 1}}
+
+Stop:
+{{Command|killall openvpn}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}
+
+[[Category:Software]]
+[[Category:Security]]
+[[Category:Network]]

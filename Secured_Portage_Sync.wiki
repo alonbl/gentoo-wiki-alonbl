@@ -1,0 +1,32 @@
+= Secured Portage Sync =
+
+The standard portage sync command uses the unsecured rsync protocol by default.
+{{Root|emerge --sync}}
+A man in the middle attack or rogue rsync mirror may alter the data and cause malformed packages to be installed.
+
+One alternative is a secure sync using emerge-webrsync, which uses the HTTP protocol to retrieve a validated Portage tarball, signed by the Gentoo Foundation with a GPG key. It will test the tarball signature and timestamp to verify the tarball before it's installed on the system.
+
+== Installation ==
+
+{{Root|emerge app-arch/tarsync app-crypt/gnupg}}
+
+{{Root|mkdir /etc/portage/gnupg}}
+{{Root|chmod 0700 /etc/portage/gnupg}}
+{{Root|<nowiki>GNUPGHOME=/etc/portage/gnupg gpg --keyserver subkeys.pgp.net --recv-keys 96D8BF6D</nowiki>}}
+
+Add:
+{{File|/etc/make.conf|<pre>
+PORTAGE_GPG_DIR="/etc/portage/gnupg"
+FEATURES="webrsync-gpg parallel-fetch userfetch userpriv usersandbox"
+SYNC="" # so emerge --sync won't work
+</pre>}}
+
+== Sync ==
+
+{{Root|emerge-webrsync}}
+
+== References ==
+
+* http://www.gentoo.org/proj/en/releng/
+
+[[Category:Security]]

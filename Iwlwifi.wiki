@@ -1,0 +1,377 @@
+iwlwifi is Intel's open source driver for their newer wireless network adapters (Intel PRO/Wireless 3945ABG/BG and newer). The driver is included in the linux kernel since version 2.6.24.
+
+== Basic Setup ==
+
+=== Kernel Setup ===
+
+Enable the "mac80211" WLAN stack and crypto options for WEP, WPA and WPA2:
+
+{{Kernel| |<pre>
+[*] Networking support  --->
+  -*-   Wireless  --->
+    <M>   cfg80211 - wireless configuration API
+    [*]     enable powersave by default
+    [*]     cfg80211 wireless extensions compatibility
+    [*]   Wireless extensions sysfs files
+    <M>   Common routines for IEEE802.11 drivers
+    <M>   Generic IEEE 802.11 Networking Stack (mac80211)
+  <M>   RF switch subsystem support  --->
+
+[*] Cryptographic API  --->
+    --- Cryptographic API
+    <M>   Cryptographic algorithm manager
+    <M>   SHA1 digest algorithm
+    <M>   SHA224 and SHA256 digest algorithm
+    <M>   ECB support
+    <M>   CBC support
+    <M>   PCBC support
+    <M>   AES cipher algorithms
+    <M>   ARC4 cipher algorithm
+    <M>   Michael MIC keyed digest algorithm
+</pre>}}
+
+Then, be sure you have activated the option "Prompt for development and/or incomplete code/drivers" in the "General Setup" section of the kernel configuration:
+
+{{Kernel| |<pre>
+General Setup --->
+    [*] Prompt for development and/or incomplete code/drivers
+</pre>}}
+
+Otherwise you won't be able to access the iwlwifi driver options in the kernel configuration!
+
+Later on, you will also have to install the corresponding microcode file for your iwlwifi network adapter (it is, of course, available in portage). The iwlwifi driver loads this file at startup. To get this working, we need to enable the kernel's firmware_loader infrastructure:
+
+{{Kernel| |<pre>
+Device Drivers --->
+    Generic Driver Options --->
+        [*] Userspace firmware loading support
+</pre>}}
+
+IMPORTANT: For the next steps, it is highly recommended to compile the drivers as kernel modules (<M> instead of <*>). This is because the driver needs access to the file system (i.e. /lib/firmware) to load the firmware. If you compile the driver as built-in, it will not be able to load the (essential) firmware since the file systems are mounted *after* the kernel has been loaded.
+
+=== Kernels >=3.1.0 ===
+
+Here is an example of a configuration for an Intel 5100 card.
+
+{{Kernel| |<pre>
+Device Drivers --->
+    [*] Network device support  --->
+      [*]   Wireless LAN  --->
+        <M>   Intel Wireless WiFi Next Gen AGN - Wireless-N/Advanced-N/Ultimate-N (iwlagn)
+</pre>}}
+
+=== Kernels >=2.6.30 ===
+
+Starting with 2.6.30, some of the options have been moved or renamed. For instance, the LED support.
+Here is an example of a configuration for an Intel 5100 card.
+
+{{Kernel| |<pre>
+Device Drivers --->
+    [*] Network device support --->
+        [*] Wireless LAN --->
+            [*] Wireless LAN (IEEE 802.11)
+            <M> Intel Wireless Wifi
+            [*]   Enable LED support in iwlagn and iwl3945 drivers
+            [*]   Enable Spectrum Measurement in iwlagn driver
+            [*]   Enable full debugging output in iwlagn and iwl3945 drivers
+            <M>   Intel Wireless WiFi Next Gen AGN (iwlagn)
+            [*]     Intel Wireless WiFi 4965AGN
+            [*]     Intel Wireless WiFi 5000AGN; Intel WiFi Link 1000, 6000, and 6050 Series
+
+</pre>}}
+
+=== Kernels >=2.6.26 ===
+
+If you have an Intel PRO/Wireless 3945AGB/BG Network Connection adapter, activate the iwl3945 driver:
+
+{{Kernel| |<pre>
+Device Drivers --->
+    [*] Network device support --->
+        [*] Wireless LAN --->
+            [*] Wireless LAN (IEEE 802.11)
+            <*> Intel Wireless Wifi Core
+            [*] IWLWIFI RF kill support
+            < > Intel Wireless WiFi 4965AGN
+            <M> Intel PRO/Wireless 3945ABG/BG Network Connection
+            [*]   Enable Spectrum Measurement in iwl3945 drivers
+</pre>}}
+
+Or if you have an Intel Wireless WiFi 4965AGN adapter, activate the iwl4965 driver:
+
+{{Kernel| |<pre>
+Device Drivers --->
+    [*] Network device support --->
+        [*] Wireless LAN --->
+            [*] Wireless LAN (IEEE 802.11)
+            <*> Intel Wireless Wifi Core
+            [*] IWLWIFI RF kill support
+            <M> Intel Wireless WiFi 4965AGN
+            [*]   Enable 802.11n HT features in iwl4965 driver
+            [*]   Enable Spectrum Measurement in iwl4965 driver
+            [*]   Enable Sensitivity Calibration in iwl4965 driver
+            < > Intel PRO/Wireless 3945ABG/BG Network Connection
+</pre>}}
+
+There is also now support for the WLAN LEDs, but be aware, that the LED blinks a lot when there is traffic:
+
+{{Kernel| |<pre>
+Device Drivers --->
+    [*] Network device support --->
+        [*] Wireless LAN --->
+            [*] Wireless LAN (IEEE 802.11)
+            <M> Intel PRO/Wireless 3945ABG/BG Network Connection
+            [*]   Enable LEDS features in iwl3945 driver
+</pre>}}
+
+
+=== Kernel 2.6.25 ===
+
+If you have an Intel PRO/Wireless 3945AGB/BG Network Connection adapter, activate the iwl3945 driver:
+
+{{Kernel| |<pre>
+Device Drivers --->
+    [*] Network device support --->
+        [*] Wireless LAN --->
+            [*] Wireless LAN (IEEE 802.11)
+            <M>   Intel PRO/Wireless 3945ABG/BG Network Connection
+            [*]     Enable Wireless QoS in iwl3945 driver
+            [*]     Enable Spectrum Measurement in iwl3945 drivers
+</pre>}}
+
+Or if you have an Intel Wireless WiFi 4965AGN adapter, activate the iwl4965 driver:
+
+{{Kernel| |<pre>
+Device Drivers --->
+    [*] Network device support --->
+        [*] Wireless LAN --->
+            [*] Wireless LAN (IEEE 802.11)
+            <M>   Intel Wireless WiFi 4965AGN
+            [*]     Enable Wireless QoS in iwl4965 driver
+            [*]       Enable 802.11n HT features in iwl4965 driver
+            [*]     Enable Spectrum Measurement in iwl4965 driver
+            [*]     Enable Sensitivity Calibration in iwl4965 driver
+</pre>}}
+
+
+
+
+
+{{Note|In the past (when?), if you had LED support enabled in your old .config, `make oldconfig' will not preserve this option}}
+
+
+
+=== Software Setup - Installing the microcode files ===
+
+You have to install the corresponding firmware/microcode for your iwlwifi network device in order to become really useful as a wireless adapter.
+
+Here is a short (and not complete) overview about what the microcode does, taken from the file README.iwlwifi-3945-ucode that is shipped with the microcode package [http://gentoo-portage.com/Search?search=net-wireless/iwl3945-ucode iwl3945-ucode] from portage:
+
+{{Note| Quote: README.iwlwifi-3945-ucode
+
+The file iwlwifi-3945.ucode provided in this package is required to be present on your system in order for the Intel PRO/Wireless 3945ABG/BG Network Connection Adapter driver for Linux (iwlwifi-3945) to be able to operate on your system.
+
+On adapter initialization, and at varying times during the uptime of the adapter, the microcode is loaded into the RAM on the network adapter. The microcode provides the low level MAC features including radio control and high precision timing events (backoff, transmit, etc.) while also providing varying levels of packet filtering which can be used to keep the host from having to handle packets that are not of interest given the current operating mode of the device.}}
+
+To install the microcode, simply emerge {{Package|net-wireless/iwl3945-ucode|direct=yes}}:
+
+{{Root|emerge -av net-wireless/iwl3945-ucode}}
+
+or, respectively {{Package|net-wireless/iwl4965-ucode|direct=yes}}:
+
+{{Root|emerge -av net-wireless/iwl4965-ucode}}
+
+or, if you have a Intel Wifi Link 5100/5300 {{Package|net-wireless/iwl5000-ucode|direct=yes}}:
+
+{{Root|emerge -av net-wireless/iwl5000-ucode}}
+
+If you have a Intel Wifi Link 6000, then you need {{Package|net-wireless/iwl6000-ucode|direct=yes}} (see [http://bugs.gentoo.org/show_bug.cgi?id=304875]).
+
+{{Root|emerge -av net-wireless/iwl6000-ucode}}
+
+If the required microcode/firmware is not in portage yet, then the latest microcode/firmware can be obtained at [http://intellinuxwireless.org/?n=downloads].
+
+It is also recommended to check the README files of the microcode packages, as they contain other useful information for setting up the device. You can usually find them in /usr/share/doc/iwl3945-ucode-*/ or /usr/share/doc/iwl4965-ucode-*/ respectively, where * is to be replaced with the package version.
+
+For further configuration follow the [http://www.gentoo.org/doc/en/handbook/handbook-x86.xml?part=4&chap=4 Gentoo Handbook].
+
+
+
+=== Networking ===
+
+For easy desktop configuration of your wireless adapter, use either [[NetworkManager]] or [[wicd]]. NetworkManager is ''heavier'', with more dependencies, but with better integration across many applications. wicd is more lightweight. Both wrap wpa_supplicant, and make changing networks often easier. If you use either, you may ignore the next section. 
+
+
+==== wpa_supplicant ====
+
+If you want to use wpa_supplicant directly, here is how to configure it.
+
+{{Root|emerge net-wireless/wpa_supplicant}}
+
+{{File|/etc/conf.d/net|<pre>
+modules="wpa_supplicant"
+config_wlan0="dhcp"
+wpa_cli_wlan0="-G3600"
+wpa_supplicant_wlan0="-D nl80211"
+</pre>}}
+
+{{Root|ln -s net.lo /etc/init.d/net.wlan0}}
+{{Root|/etc/init.d/net.wlan0 start}}
+
+== Advanced Topics ==
+
+There are a few things you can play with through the sysfs interface /sys/bus/pci/drivers/iwl3945/00*/*
+
+=== Monitor mode ===
+
+To learn how set your card into [http://www.wikipedia.org/wiki/Monitor_mode monitor mode], see the guide at [http://aircrack-ng.org/doku.php?id=iwl3945 aircrack-ng.org].
+
+=== Hibernate (kernels < 3.0.0 only) ===
+
+{{Note|Starting from Linux-3.0.0 no need tweaking networking during suspend, you can safely skip this}}
+
+The hibernate package needs to be told to restart the networking interface when hibernate resumes. The networking interface (includes and is not limited to: apipa arping ccwgroup macchanger macnet rename iwconfig essidnet iptunnel ifconfig pppd system dhcpcd ip6to4 ifconfig pppd dhcpcd) needs to be restarted when hibernation is invoked.
+
+The hibernate package contains a convenient mechanism to restart the networking interface. The hibernate configuration file {{Path|common.conf}} contains a section for networking:
+{{File|/etc/hibernate/common.conf|<pre>
+### network
+# DownInterfaces eth0
+# UpInterfaces auto </pre>}}
+ 
+Try to do this: uncomment the resume interface operation declarations and set it to the interface of your wireless interface. 
+{{File|/etc/hibernate/common.conf|<pre>
+### network
+DownInterfaces wlan0
+UpInterfaces auto </pre>}}
+
+== Troubleshooting ==
+
+=== Switching from ipw3945 ===
+
+If you switched from [http://www.gentoo-wiki.info/Ipw3945 ipw3945], you should unmerge everything that belonged to ipw3945. Also you may want to clean up your device names. Problems occur here because some drivers refer to your wireless interface as wlan0, some as ethX. You need to reconfigure /etc/udev/rules.d/70-persistent-net or recreate the rules there. You can use udevadm to recreate the rules #udevadm trigger --subsystem-match=net
+
+Occasionally switching from ipw3945 to iwlwifi will not work because of some missing symlinks. See [http://forums.gentoo.org/viewtopic-t-710359-highlight-iwlwifi.html iwl3945 + wpa_supplicant + hardware switch] for a detailed description. 
+In summary:
+{{Root|<pre>cd /etc/init.d
+ln -sfn net.lo net.wlan0</pre>}}
+
+=== My WLAN LED does not work ? ===
+
+Support is added since kernel 2.6.26.
+
+=== iwl4965: iwlwifi-4965-1.ucode firmware file req failed: Reason -2 ===
+
+This error indicate a firmware version/filename mismatch. Just rename the file to whatever iwlwifi displays in this case: iwlwifi-4965-1.ucode
+If this fails, try an alternate version, perhaps net-wireless/iwl4965-ucode-228.57.1.21.
+
+=== Problem with wpa_supplicant and asociation ===
+
+If the AP SSID is hidden or there multiple SSIDs with the same name, be sure that ap_scan does not exist or is commented out in /etc/wpa_supplicant/wpa_supplicant.conf.
+
+=== Netmount starting too early ===
+
+Netmount crapped out because the network was not ready. The solution, from [http://www.mail-archive.com/gentoo-user@lists.gentoo.org/msg51325.html this gentoo-user post] is to edit /etc/conf.d/rc so that the Wifi is not started by udev, e.g., RC_PLUG_SERVICES="!net.wlan".
+
+=== Unable to associate with access point (AP) and 'iwlist wlan0 scanning' says 'Interface doesn't support scanning' ===
+
+Try to do this:
+{{Root|<pre>modprobe -r iwl3945
+modprobe iwl3945 disable_hw_scan=1</pre>}}
+If 'iwlist wlan0 scanning' now works, create /etc/modprobe.d/iwl3945 and run update-modules like this:
+{{Root|<pre>echo "options iwl3945 disable_hw_scan=1" > /etc/modprobe.d/iwl3945
+update-modules</pre>}}
+When I got this message I did it the other way around:
+{{Root|<pre>modprobe -r iwl3945
+modprobe iwl3945 disable_hw_scan=0</pre>}}
+And then I was able to scan. If you are also able to scan after changing to 0 you can do the following to make the change permanent:
+{{Root|<pre>echo "options iwl3945 disable_hw_scan=0" > /etc/modprobe.d/iwl3945
+update-modules</pre>}}
+
+=== Unable to associate with access point (AP) that uses WEP and 'MAC is in deep sleep" in /var/log/messages ===
+
+Check if your /etc/conf.d/net ESSID contains any special characters and if yes, the key_ESSID="<something>" should no longer contain '_' in stead of the special characters - in stead write the real ESSID. E.g. if ESSID is 'Rødgrød', use key_Rødgrød="<something>", NOT key_R_dgr_d="<something>".
+
+If you want to debug why /etc/init.d/net.wlan0 start fails, use /etc/init.d/net.wlan0 --debug --verbose start to see the steps. The above was found like that, the output showed that WEP was disabled.
+
+=== Switching to Ad-Hoc mode doesn't work ===
+
+If you are using iwconfig and trying to switch to Ad-hoc mode, but keep getting the following error:
+
+{{Root|<pre>Error for wireless request "Set Mode" (8B06) :
+    SET failed on device wlan0 ; Operation not supported.</pre>}}
+
+The issue probably relates to the new CRDA regulatory stuffs in >=2.6.28 kernels.  See [http://intellinuxwireless.org/bugzilla/show_bug.cgi?id=1894 this bug on intellinuxwireless.org] for more info and how to fix.
+
+=== RTNETLINK answers: Unknown error 132 ===
+
+If you get this error after trying to bring up your WLAN interface (see the following two examples), then your kernel driver might try to access the wrong microcode/firmware.
+
+{{Root|<pre>
+ * Starting wlan0
+RTNETLINK answers: Unknown error 132
+RTNETLINK answers: Unknown error 132
+ *   Starting wpa_supplicant on wlan0 ...
+RTNETLINK answers: No such file or directory
+SIOCSIFFLAGS: No such file or directory
+Could not set interface 'wlan0' UP       [ ok ]
+ *   Starting wpa_cli on wlan0 ...       [ ok ]
+ *     Backgrounding ...
+</pre>}}
+
+{{Root|<pre> # ifconfig wlan0 up
+SIOCSIFFLAGS: No such file or directory
+</pre>}}
+
+In this case, run ''dmesg''. If you get the following messages, then you have either installed no microcode/firmware or the wrong one.
+
+{{Code|$ dmesg|<pre>
+...
+firmware.sh[7080]: Cannot find  firmware file 'iwlwifi-6000-4.ucode'
+klogd: [  692.155992] iwlagn 0000:03:00.0: iwlwifi-6000-3.ucode firmware file req failed: -2
+klogd: [  692.155996] iwlagn 0000:03:00.0: firmware: requesting iwlwifi-6000-2.ucode
+firmware.sh[7086]: Cannot find  firmware file 'iwlwifi-6000-3.ucode'
+klogd: [  692.162868] iwlagn 0000:03:00.0: iwlwifi-6000-2.ucode firmware file req failed: -2
+klogd: [  692.162873] iwlagn 0000:03:00.0: firmware: requesting iwlwifi-6000-1.ucode
+firmware.sh[7092]: Cannot find  firmware file 'iwlwifi-6000-2.ucode'
+iwlagn 0000:03:00.0: iwlwifi-6000-1.ucode firmware file req failed: -2
+iwlagn 0000:03:00.0: Could not read microcode: -2
+firmware.sh[7108]: Cannot find  firmware file 'iwlwifi-6000-1.ucode'
+...
+</pre>}}
+
+The microcode/firmware is installed in /lib/firmware/. If there is no microcode/firmware file or a wrong one, which does not match any microcode/firmware listed in ''dmesg'' output, then you have to install one of them (in this case iwlwifi-6000-4.ucode, iwlwifi-6000-3.ucode, iwlwifi-6000-2.ucode, or iwlwifi-6000-1.ucode). Afterwards reboot your system (just removing and loading the interface kernel driver didn't work).
+
+In this example a Intel WiFi Link 6000 interface is used that requires microcode/firmware iwlwifi-6000-4.ucode. However, microcode/firmware iwlwifi-5000-2.ucode is installed.
+
+{{Code|$ ls -l /lib/firmware/|<pre>
+...
+-rw-r--r-- 1 root root 353240 Mar 19 20:55 iwlwifi-5000-2.ucode
+...
+</pre>}}
+
+If you are sure that you have the correct microcode installed, it could be that your interface is software blocked. Please try the following:
+
+{{Root|<pre>$ rfkill unblock all</pre>}}
+
+=== Authentication with 00:ef:dd:cc:bb:aa timed out ===
+
+If everything is going well (there are no errors in the syslog see below) but there is always a timeout during authentication, then your access point might has MAC-based access control enabled. Check your access point whether MAC-based access control is enabled and add your WLAN interface's MAC address to this list. Afterwards, a successful authentication should be possible.
+
+{{File|/var/log/syslog|<pre>
+...
+wlan0: deauthenticating from 00:ef:dd:cc:bb:aa by local choice (reason=3)
+wlan0: direct probe to AP 00:ef:dd:cc:bb:aa (try 1)
+wlan0: direct probe to AP 00:ef:dd:cc:bb:aa (try 2)
+wlan0: direct probe to AP 00:ef:dd:cc:bb:aa (try 3)
+wlan0: direct probe to AP 00:ef:dd:cc:bb:aa timed out
+...
+</pre>}}
+
+== Links ==
+
+* [http://intellinuxwireless.org/?p=iwlwifi iwlwifi website]
+* [http://www.gentoo.org/doc/en/handbook/handbook-x86.xml?part=4&chap=4 Gentoo wireless LAN howto]
+
+[[Category:Intel]]
+[[Category:Wireless]]
+
+[[de:Iwlwifi]]

@@ -1,0 +1,43 @@
+= PPPoE Client =
+
+PPPoE is basically PPP over Ethernet, most common used with broadband routers.
+
+== Installation ==
+
+Configure system to run ppp, see [[PPP_Client|how to configure ppp client]].
+
+{{Kernel||<pre>
+  Device Drivers  --->
+    [*] Network device support  --->
+      <M>   PPP (point-to-point protocol) support
+        <M>     PPP over Ethernet (EXPERIMENTAL)
+</pre>}}
+
+{{Root|emerge net-dialup/rp-pppoe}}
+
+== Configuration ==
+
+Provided eth0 should be used for connection, add:
+{{File|/etc/conf.d/net|<pre>
+rc_need_ppp1="firewall net.eth0" # firewall is optional
+config_ppp1="ppp"
+plugins_ppp1="pppoe"
+link_ppp1="eth0"
+username_ppp1=''   # set your username
+password_ppp1=''   # set your password
+</pre>}}
+
+{{Root|ln -s net.lo /etc/init.d/net.ppp1}}
+
+== Management ==
+
+{{Root|/etc/init.d/net.ppp1 start}}
+{{Root|/etc/init.d/net.ppp1 stop}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}
+
+[[Category:Network]]

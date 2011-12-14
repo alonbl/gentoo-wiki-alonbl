@@ -1,0 +1,173 @@
+= Bugzilla Email =
+
+Bugzilla email setup looks complex, but actually simple. Following are instructions for both incoming and outgoing mails.
+
+== Installation ==
+
+{{Root|emerge net-mail/fetchmail mail-mta/postfix}}
+
+== Configuration ==
+
+=== System ===
+
+Modify:
+{{File|/etc/postfix/main.cf|<pre>
+mydestination = localhost.localdomain
+</pre>}}
+
+Replace bugz@mydomain.com and secret by your own user and password to fetch bugzilla mails.
+{{File|/etc/fetchmailrc|<pre>
+poll mail.mydomain.com proto pop3
+user "bugz@mydomain.com" password "secret" is apache@localhost.localdomain
+ssl
+</pre>}}
+
+{{Root|chown fetchmail /etc/fetchmailrc}}
+{{Root|/etc/init.d/postfix start}}
+{{Root|/etc/init.d/fetchmail start}}
+{{Root|rc-update add postfix default}}
+{{Root|rc-update add postfix default}}
+
+{{File|/var/www/.forward|<pre>
+"| /var/www/localhost/htdocs/bugzilla/email_in.pl -vvvvvvvvv >> /var/log/apache2/bugzilla-email.log 2>&1"
+</pre>}}
+
+{{File|/etc/logrotate.d/bugzilla-email.conf|<pre>
+/var/log/apache2/bugzilla-email.log {
+  missingok
+  notifempty
+}
+</pre>}}
+
+=== Bugzilla ===
+
+Administration → Parameters → Email
+  mail_delivery_method: Sendmail
+  mailfrom: bugz@mydomain.com
+  use_mailer_queue: off
+
+== Customization ==
+
+{{Root|cd /var/www/localhost/htdocs/bugzilla}}
+{{Root|mkdir local}}
+{{Root|cd local}}
+{{Root|ln -s ../Bugzilla}}
+{{Root|ln -s ../Bugzilla.pm}}
+
+{{Root|mkdir -p template/en/custom/email}}
+{{Root|cd ../template/en}}
+{{Root|ln -s ../../local/template/en/custom}}
+{{Root|cp default/email/newchangedmail.txt.tmpl custom/email/newchangedmail.txt.tmpl}}
+
+This will make bugzilla send mails on behalf of the users, but allow reply to bugzilla account, modify:
+{{File|/var/www/localhost/htdocs/bugzilla/template/en/custom/email/newchangedmail.txt.tmpl|<pre>
+From: [% changer.login %]
+Reply-To: [% Param('mailfrom') %]
+</pre>}}
+
+If you are using gmail, there is a [http://www.google.com/support/forum/p/gmail/thread?fid=4641785bf01dbd9a00049dc47e25e854&hl=en bug] so in order to properly reply to bugs you update modify:
+{{File|/var/www/localhost/htdocs/bugzilla/template/en/custom/email/newchangedmail.txt.tmpl|<pre>
+From: [% changer.login.replace("@MYDOMAIN\.COM|@mydomain\.com", "+bugz@mydomain.com") %]
+</pre>}}
+
+== Test ==
+
+=== Outgoing ===
+
+Modify a bug, you should receive update notification from your-self.
+
+Reply, and you should see bugz@mydomain.com as TO.
+
+=== Incoming ===
+
+Send the following mail to bugz@mydomain.com:
+{{Codeline|<pre>
+Subject: ignored
+@bug_id = 1
+
+Test 1 2 3
+</pre>}}
+
+You should see bug#1 updated with "Test 1 2 3" text.
+
+== Subversion Integration ==
+
+The following simple script scans the commit message for bug#NNNN and sends bugzilla
+mail with change set information linking to viewvc to ease review.
+
+
+{{Code|commit-bugzilla.sh|<pre>
+#!/bin/sh
+# Copyright 2010-2011 Alon Bar-Lev <alon.barlev@gmail.com>
+# Distributed under the terms of the GNU General Public License v2
+
+common_dir() {
+	local COMMON
+	local CANDIDATE
+	local n
+
+	read COMMON
+	while read CANDIDATE; do
+		n=0
+		while [ -n "${COMMON:$n}" -a "${COMMON:0:$n}" = "${CANDIDATE:0:$n}" ]; do
+			n=$(($n+1))
+		done
+		COMMON="${COMMON:0:$n}"
+	done
+	echo "${COMMON}" | sed 's#/[^/]*$#/#'
+}
+
+BASE="$(dirname "$0")"
+REPOS="$1"
+REV="$2"
+
+DIR="$(svnlook dirs-changed "${REPOS}" -r "${REV}" | sort | common_dir)"
+MSG="$(svnlook log "${REPOS}" -r "${REV}")"
+FROM="$(svnlook author "${REPOS}" -r "${REV}")"
+TO="${TO:-bugz@mydomain.com}"
+VIEWVC="http://my.mydomain.com/viewvc"
+
+TOP="$(echo "${MSG}" | head -n1)"
+
+for BUG in $(echo "${MSG}" | grep -i -o 'bug#[0-9][0-9]*'); do
+
+	BUGID="$(echo "${BUG}" | sed 's/bug#//i')"
+
+	/usr/sbin/sendmail -B8BITMIME "${TO}" << __EOF__
+Subject: Bugzilla update
+From: ${FROM}
+Content-type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+@bug_id = ${BUGID}
+
+=== COMMIT ===
+$(basename "${REPOS}")@${REV}:${DIR}
+${FROM}
+${VIEWVC}/$(basename "${REPOS}")/?view=revision&revision=${REV}
+Log:
+${MSG}
+__EOF__
+
+done
+</pre>}}
+
+To use, go to your repository and create/update hooks/post-commit hook (don't forget to mark as executable):
+{{Code|hooks/post-commit|<pre>
+#!/bin/sh
+
+REPOS="$1"
+REV="$2"
+
+export LC_ALL="en_US.UTF-8"
+
+commit-bugzilla.sh "${REPOS}" "${REV}"
+</pre>}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}
+
+[[Category:Software]]

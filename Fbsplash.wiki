@@ -1,0 +1,131 @@
+Fbsplash is set of userspace utilities that control the framebuffer console and integrate with the system startup procedure to draw boot splash screens. Fbsplash scripts and utilities for gentoo are distributed as part of the {{Package|media-gfx/splashutils}} package.
+
+== Prerequisites ==
+In order for the fbsplash to do anything useful you will first need to configure and setup the [[Framebuffer]]. Also read the [[Initramfs#Kernel_Configuration|initramfs kernel configuration]] chapter for instruction on enabling initramfs support, which is needed for a splash initramfs image.
+
+=== Kernel Configuration ===
+
+If you intend to use a [[Framebuffer]] splash you'll need to make sure the driver is built-in, and not built as a module. You will also need to enable ''Framebuffer Console support'' and ''Support for the Framebuffer Console Decorations''. If the ''Enable Tileblitting'' option is turned on in ''Support for frame buffer devices'' in the kernel configuration, the framebuffer console decorations option will be invisible. Please make sure to turn it off.
+{{Kernel|Kernel optional framebuffer configuration|<pre>
+Device Drivers ->
+    Graphics support ->
+        <*> Support for frame buffer devices  --->
+            Console display driver support  --->
+                <*> Framebuffer Console support
+                [ ] Enable Tile Blitting Support
+                [*] Support for the Framebuffer Console Decorations
+</pre>}}
+
+If you want to get the {{Key|F2}} key working to switch to verbose and silent when using a splash screen, enable the ''Event Interface'',
+{{Kernel|enabling the Event Interface|<pre>
+Device Drivers --->
+    Input Device Support --->
+        <*> Event Interface
+</pre>}}
+
+== Installation ==
+Make sure you enable the {{EnableFlag|fbcondecor}} USE-flag. Also note that there are themes that require the {{USEFlag|mng}} USE-flags, so enabling it is generally a good idea. {{Package|media-gfx/splashutils}} needs its dependencies compiled with {{EnableFlag|static-libs}} enabled, portage will inform you on which packages needs this flag enabled.
+{{Root|emerge -avN splashutils}}
+
+== Themes ==
+Themes can be obtained by emerging {{Package|media-gfx/splash-themes-livecd}}, {{Package|media-gfx/splash-themes-gentoo}}, {{Package|media-gfx/splash-themes-livecd}} and {{Package|media-gfx/bootsplash-themes}},
+{{Root|emerge -av splash-themes-livecd splash-themes-gentoo splash-themes-livecd bootsplash-themes}}
+The {{Package|media-gfx/bootsplash-themes}} package will install to {{Path|/etc/bootsplash}}, but it will convert the themes automatically to splashutils compatible themes and moves them to {{Path|/etc/splash/}} as well, so there is no need for any manual conversion.
+
+If you wish to set/preview a theme without booting you can use {{Codeline|splash_manager}}.  Note these commands must be run as root user (or sudo).
+{{Root|<nowiki>splash_manager -c set --theme=livecd-2007.0 --tty=1</nowiki>}}
+
+This will change the theme on '''tty1''' to ''livecd-2007.0''. You can choose any theme in {{Path|/etc/splash}} that matches your current resolution. Now to see the theme go to tty1 by pressing {{Key|Ctrl+Alt+F1}}.
+
+If you want to preview a theme in silent mode without reboot, then try
+{{Root|<nowiki>splash_manager -c demo -t livecd-2007.0 -m s --steps=100</nowiki>}}
+Please note, don't run this command under X window.
+
+For more reference please refer to
+{{Root|<nowiki>splash_manager --help</nowiki>}}
+
+== Generating initramfs ==
+
+=== The genkernel way ===
+
+Assuming splash is livecd-2007.0 and required resolution is 1024x768:
+{{Root|<nowiki>genkernel --splash=livecd-2007.0 --splash-res=1024x768 ...</nowiki>}}
+
+=== The manual way ===
+
+To generate the [[initramfs]] splash image, we use {{Codeline|splash_geninitramfs}} (you need to enable the fbcondecor_ctl use flag for media-gfx/splashutils). The syntax is,
+{{Root|<nowiki>splash_geninitramfs --verbose --res NxN --generate /boot/initramfs-bootsplash theme</nowiki>}}
+The themes are located in {{Path|/etc/splash}}. So to generate a initramfs splash image with the ''gentoo'' theme with a resolution of ''1024x768'',
+{{Root|<nowiki>splash_geninitramfs --verbose --res 1024x768 --generate /boot/initramfs-bootsplash gentoo</nowiki>}}
+The {{Path|/boot/initramfs-bootsplash}} initramfs image is now created.
+
+If you already have a initramfs source directory, and want to just add the boot splash to it, use the copy switch instead,
+{{Root|<nowiki>splash_geninitramfs --verbose --res NxN --copy /path/to/initramfsdir theme</nowiki>}}
+Replace {{Path|/path/to/initramfsdir}} with the path to your initramfs source directory. This will copy all required files to your initramfs source directory.
+
+If you already have a initramfs image, and want to append the boot splash to it, use the append switch,
+{{Root|<nowiki>splash_geninitramfs --verbose --res NxN --append /path/to/initramfsimage theme</nowiki>}}
+Replace {{Path|/path/to/initramfsimage}} with the path to your initramfs image.
+
+Finally, if you want to check the content of the initramfs image,
+{{Root|<nowiki>zcat /path/to/initramfsimage  | cpio --list</nowiki>}}
+
+== Configuring Bootloader ==
+Fbsplash requires its own kernel command line option, which allows you to specify which theme should be used. In this case, the theme is ''gentoo_natural''. The other required option need to be ''verbose'' or ''silent''. If ''silent'' is set, it will hide all the bootup information. Otherwise, you will be shown all the bootup information on system startup. In the example below we use the ''verbose'' option and the theme ''natural_gentoo''. Note that we assume you have configured your [[Framebuffer]] correctly and already set your video= options. Also note the ''console=tty1'' (or ''CONSOLE=/dev/tty1'') option, this is also a requirment for the splash to display. Finally the actual initramfs image, adding a new ''initrd'' line below the ''kernel'' line tells GRUB to load the initramfs image aswell. Make sure to replace (hdX,Y) with your root device.
+{{File|/boot/grub/grub.conf|<pre>
+...
+kernel /vmlinuz... video=... splash=verbose,theme:natural_gentoo console=tty1
+initrd (hdX,Y)/boot/initramfs-bootsplash
+..
+</pre>}}
+To see full documentation of the kernel parameters specific to splash you need to look in {{Path|/usr/share/doc/splashutils*/kernel_parameters}} which should be included in splashutils. You should be able to see it by typing (this assumes that you have emerged splashutils).
+{{Command|less /usr/share/doc/splashutils*/kernel_parameters}}
+
+Example of full kernel command:
+{{Codeline|<pre>
+video=inteldrmfb:1920x1200-32@60 splash=silent,fadein,theme:livecd-2007.0 quiet console=tty1
+</pre>}}
+
+== fbcondecor ==
+To automatically set a background on framebuffer consoles at boot, you can use the fbcondecor init script :
+{{Root|rc-update add fbcondecor default}}
+You can select which tty(s) to set a background image to through the {{Codeline|FBCONDECOR_TTYS}} variable and to set the theme of each tty through the {{Codeline|FBCONDECOR_TTY_MAP}} variable.
+{{File|/etc/conf.d/fbcondecor|<pre>
+# On which TTYs should fbcondecor be enabled? Defaults to RC_TTY_NUMBER.
+# FBCONDECOR_TTYS="1 2 3 4 5 6"
+
+# Allows to set different themes on different consoles
+# format: "<console>:<theme> <console>:<theme> (...)"
+# FBCONDECOR_TTY_MAP="1:emergence"
+
+</pre>}}
+=== Unpatched Kernel ===
+
+If you happen to be using a vanilla kernel you will not have the ''Support for the Framebuffer Console Decorations'' option available, there are a few small steps you need make to enable this. First, you need to download the patch for your kernel from the developer of fbcondecor, Spock, [http://dev.gentoo.org/~spock/projects/fbcondecor/ site].
+
+Apply the patch. Don't worry if the kernel version doesn't match exactly, as this patch is not that intrusive:
+{{Root|cd /usr/src/linux}}
+{{Root|wget http://dev.gentoo.org/~spock/projects/fbcondecor/archive/fbcondecor-XXXXX.patch}}
+{{Root|patch -p1 < fbcondecor-XXXXX.patch}}
+Replace '''XXXXX''' with the version you require.
+
+== Troubleshooting ==
+=== Genkernel ===
+Genkernel suports putting a splash into the initrd for early boot display of a splash screen, however, it will print lines over the splash, seemingly ignoring the "CONSOLE=/dev/tty1" from the kernel boot line.
+
+To correct this, change in genkernel's initrd.defaults:
+{{file|/usr/share/genkernel/defaults/initrd.defaults|
+<pre>CONSOLE=/dev/console</pre>}}
+to:
+{{file|/usr/share/genkernel/defaults/initrd.defaults|
+<pre>CONSOLE=/dev/tty1</pre>}}
+
+Rebuild your initrd with:
+{{Root|<nowiki>genkernel ramdisk --splash=name-of-splash --splash-res=your-resolution</nowiki>}}
+
+== External Links ==
+[http://fbsplash.berlios.de/wiki fbsplash Website]
+
+[[ru:HOWTO fbsplash]]
+
+[[Category:Tutorials]]

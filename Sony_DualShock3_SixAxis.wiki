@@ -1,0 +1,57 @@
+= Sony DualShock3 SixAxis =
+
+[[File:Sony_DualShock3_SixAxis.png|400px]]
+
+This is a work in progress to integrate this device into Linux. USB is working perfectly, bluetooth is progressing.
+
+{{Warning|Beware of fake devices! there are some devices in the market that looks *EXACTLY* like Sony's device but behaves differently, buy only the original.}}
+
+== Configuration ==
+
+You must use kernel 3.1.0 and above!
+
+First, configure [[Bluetooth|bluetooth]].
+
+{{Kernel||<pre>
+  [*] Networking support  --->
+    <M>   Bluetooth subsystem support  --->
+      <M>   HIDP protocol support
+  Device Drivers  --->
+    Input device support  --->
+      <M>   Joystick interface
+      <M>   Event interface
+      [*]   Miscellaneous devices  --->
+        <M>   User level driver support
+    [*] HID Devices  --->
+      {M}   Generic HID support
+      [*]     /dev/hidraw raw HID device support
+      <M>   USB Human Interface Device (full HID) support
+      Special HID drivers  --->
+       <M> Sony PS3 controller
+</pre>}}
+
+Add:
+{{File|/etc/conf.d/modules|<pre>
+modules="${modules} uinput"
+</pre>}}
+
+You need to patch {{Package|net-wireless/bluez}}, send a message to [[User:Alonbl|me]] to get latest.
+
+== Associate ==
+
+This device association is done via USB, once installing the patches, connect the device using USB, and press the Sony button until you see only one led turned on.
+Then you can disconnect the device and press the sony button to associate via bluetooth.
+
+== Test ==
+
+You can always test the device using the following command and move stick or press buttons:
+{{Command|cat /dev/input/jsX}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}
+
+[[Category:Hardware]]
+[[Category:Bluetooth]]

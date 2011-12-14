@@ -1,0 +1,79 @@
+= ZTE USB GSM Modem =
+
+== Device ==
+
+[[File:ZTE_USB_GSM_Modem.jpg|200px]]
+
+USB
+{{Codeline|<pre>
+19d2:2000 ONDA Communication S.p.A. ZTE MF627/MF628/MF628+/MF636+ HSDPA/HSUPA
+19d2:0117 ONDA Communication S.p.A.
+</pre>}}
+
+== Installation ==
+
+{{Kernel||<pre>
+  Device Drivers  --->
+    SCSI device support  --->
+      {M} SCSI device support
+      <M> SCSI CDROM support
+    [*] USB support  --->
+      <M>   USB Mass Storage support
+</pre>}}
+
+You should also configure the system to run PPP.&nbsp; See [[PPP_Client|how to configure ppp client]].
+
+Device is first exposed as CDROM, need special utility to switch it into modem mode.
+{{Root|emerge sys-apps/usb_modeswitch}}
+
+Unplug and plug device. You should see it as:
+ 19d2:2000 ONDA Communication S.p.A. ZTE MF627/MF628/MF628+/MF636+ HSDPA/HSUPA
+Then it should be converted to:
+ 19d2:0117 ONDA Communication S.p.A.
+
+== Network configuration ==
+
+Add:
+{{File|/etc/conf.d/net|<pre>
+rc_need_ppp2="firewall"           # optional, if you have firewall
+config_ppp2="ppp"
+link_ppp2="/dev/ttyUSB4"
+pppd_ppp2="noauth defaultroute usepeerdns lock mru 296 mtu 296"
+phone_number_ppp2="*99#"
+isp_ppp2="internet"               # set this to match your network
+chat_ppp2="
+ABORT BUSY
+ABORT ERROR
+ABORT 'NO ANSWER'
+ABORT 'NO CARRIER'
+ABORT 'NO DIALTONE'
+ABORT 'Invalid Login'
+ABORT 'Login incorrect'
+TIMEOUT 5
+'' 'ATZ'
+OK AT+cfun=1
+OK AT+cgreg=1
+OK AT+CGDCONT=1,\\\"IP\\\",\\\"${isp_ppp2}\\\"
+OK AT
+OK 'ATDT\T'
+TIMEOUT 60
+CONNECT ''
+TIMEOUT 5
+'~--' ''"
+</pre>}}
+
+{{Root|ln -s net.lo /etc/init.d/net.ppp2}}
+
+== Manage ==
+
+{{Root|/etc/init.d/net.ppp2 start}}
+{{Root|/etc/init.d/net.ppp2 stop}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}
+
+[[Category:Hardware]]
+[[Category:Network]]

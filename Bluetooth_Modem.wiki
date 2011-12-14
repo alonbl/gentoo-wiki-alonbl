@@ -1,0 +1,67 @@
+= Bluetooth Modem =
+
+Bluetooth modems are very common, especially common when cellular phone is bluetooth enabled.
+
+== Configuration ==
+
+First setup core [[Bluetooth|bluetooth]].
+
+{{Kernel||<pre>
+  [*] Networking support  --->
+    <M>   Bluetooth subsystem support  --->
+      <M>   RFCOMM protocol support
+      [*]     RFCOMM TTY support
+</pre>}}
+
+Add:
+{{File|/etc/conf.d/modules|<pre>
+modules="${modules} bluethooth"
+</pre>}}
+
+== Device Attach ==
+
+Attach you modem as any regular device see [[Bluetooth]].
+
+== Setup rfcomm ==
+
+Assuming device address is 00:24:7C:2F:92:7C, add entry:
+{{File|/etc/bluetooth/rfcomm.conf|<pre>
+rfcomm0 {
+        bind yes;
+        device 00:24:7C:2F:92:7C;
+        channel 4;
+        comment "My phone";
+}
+</pre>}}
+
+The tricky is to find the channel number, if you don't have documentation of device, simply start of 0 and increment while testing.
+
+Restart bluetooth:
+{{Root|/etc/init.d/bluetooth restart}}
+
+== Test ==
+
+Test using {{Package|net-misc/taylor-uucp}}
+{{Root|emerge net-misc/taylor-uucp}}
+
+Simply enter "AT" and expect for "OK", to exit use "~." sequence.
+{{Root|cu -l /dev/rfcomm0}}
+{{Codeline|<pre>
+# cu -l /dev/rfcomm0 
+Connected.
+AT
+OK
+!.
+</pre>}}
+
+== Network ==
+
+Now you can configure [[PPP_Client|ppp]] to be used with modem.
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}
+
+[[Category:Bluetooth]]

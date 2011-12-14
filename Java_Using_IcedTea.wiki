@@ -1,0 +1,48 @@
+= Java Using IcedTea =
+
+{{Package|dev-java/icedtea}} or OpenJDK can be used in order to build java from source, however there is egg and chicken scenario as icedtea needs java to be built, unfortunate the java herd does not help in the process, similar to {{Package|sys-devel/crossdev}}.
+
+This documents how to compile java the Gentoo way, build from sources.
+
+== Bootstrap ==
+
+First we need a java in our system... we will use gcc's gcj.
+
+{{File|/etc/portage/package.use/java-bootstrap.conf|<pre>
+sys-devel/gcc gcj
+</pre>}}
+{{File|/etc/portage/package.accept_keywords/java-bootstrap.conf|<pre>
+dev-java/ecj-gcj ~amd64
+</pre>}}
+
+{{Root|emerge --oneshot sys-devel/gcc}}
+{{Root|emerge --update --deep --newuse @world}}
+{{Root|emerge dev-java/gcj-jdk}}
+
+== IcedTea ==
+
+{{File|/etc/portage/package.use/my-java.conf|<pre>
+dev-java/antlr java
+dev-java/icedtea -nsplugin -webstart -source
+</pre>}}
+{{File|/etc/portage/package.accept_keywords/my-java.conf|<pre>
+dev-java/icedtea:6 ~amd64
+</pre>}}
+{{Root|emerge dev-java/icedtea}}
+{{Root|<nowiki>java-config --set-system-vm=icedtea-6</nowiki>}}
+
+== Cleanup ==
+
+{{Root|rm /etc/portage/package.use/java-bootstrap.conf /etc/portage/package.accept_keywords/java-bootstrap.conf}}
+{{Root|emerge --unmerge dev-java/gcj-jdk}}
+{{Root|emerge --update --deep --newuse @world}}
+{{Root|emerge --depclean}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}
+
+
+[[Category:Software]]

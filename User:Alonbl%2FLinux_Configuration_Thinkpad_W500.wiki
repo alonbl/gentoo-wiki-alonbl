@@ -1,0 +1,167 @@
+= Alonbl's Thinkpad W500 =
+
+Following is extension to [[User:Alonbl/Linux_Configuration_Common]] with Thinkpad W500 configuration.
+
+Same guidelines of minimal module only configuration.
+
+== Hardware ==
+
+=== PCI ===
+
+{{Codeline|<pre>
+00:00.0 Host bridge [0600]: Intel Corporation Mobile 4 Series Chipset Memory Controller Hub [8086:2a40] (rev 07)
+00:02.0 VGA compatible controller [0300]: Intel Corporation Mobile 4 Series Chipset Integrated Graphics Controller [8086:2a42] (rev 07)
+00:02.1 Display controller [0380]: Intel Corporation Mobile 4 Series Chipset Integrated Graphics Controller [8086:2a43] (rev 07)
+00:03.0 Communication controller [0780]: Intel Corporation Mobile 4 Series Chipset MEI Controller [8086:2a44] (rev 07)
+00:03.3 Serial controller [0700]: Intel Corporation Mobile 4 Series Chipset AMT SOL Redirection [8086:2a47] (rev 07)
+00:19.0 Ethernet controller [0200]: Intel Corporation 82567LM Gigabit Network Connection [8086:10f5] (rev 03)
+00:1a.0 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #4 [8086:2937] (rev 03)
+00:1a.1 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #5 [8086:2938] (rev 03)
+00:1a.2 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #6 [8086:2939] (rev 03)
+00:1a.7 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB2 EHCI Controller #2 [8086:293c] (rev 03)
+00:1b.0 Audio device [0403]: Intel Corporation 82801I (ICH9 Family) HD Audio Controller [8086:293e] (rev 03)
+00:1c.0 PCI bridge [0604]: Intel Corporation 82801I (ICH9 Family) PCI Express Port 1 [8086:2940] (rev 03)
+00:1c.1 PCI bridge [0604]: Intel Corporation 82801I (ICH9 Family) PCI Express Port 2 [8086:2942] (rev 03)
+00:1c.3 PCI bridge [0604]: Intel Corporation 82801I (ICH9 Family) PCI Express Port 4 [8086:2946] (rev 03)
+00:1c.4 PCI bridge [0604]: Intel Corporation 82801I (ICH9 Family) PCI Express Port 5 [8086:2948] (rev 03)
+00:1d.0 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #1 [8086:2934] (rev 03)
+00:1d.1 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #2 [8086:2935] (rev 03)
+00:1d.2 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #3 [8086:2936] (rev 03)
+00:1d.7 USB Controller [0c03]: Intel Corporation 82801I (ICH9 Family) USB2 EHCI Controller #1 [8086:293a] (rev 03)
+00:1e.0 PCI bridge [0604]: Intel Corporation 82801 Mobile PCI Bridge [8086:2448] (rev 93)
+00:1f.0 ISA bridge [0601]: Intel Corporation ICH9M-E LPC Interface Controller [8086:2917] (rev 03)
+00:1f.2 SATA controller [0106]: Intel Corporation ICH9M/M-E SATA AHCI Controller [8086:2929] (rev 03)
+00:1f.3 SMBus [0c05]: Intel Corporation 82801I (ICH9 Family) SMBus Controller [8086:2930] (rev 03)
+03:00.0 Network controller [0280]: Intel Corporation PRO/Wireless 5100 AGN [Shiloh] Network Connection [8086:4237]
+15:00.0 CardBus bridge [0607]: Ricoh Co Ltd RL5c476 II [1180:0476] (rev ba)
+15:00.1 FireWire (IEEE 1394) [0c00]: Ricoh Co Ltd R5C832 IEEE 1394 Controller [1180:0832] (rev 04)
+15:00.2 SD Host controller [0805]: Ricoh Co Ltd R5C822 SD/SDIO/MMC/MS/MSPro Host Adapter [1180:0822] (rev 21)
+15:00.3 System peripheral [0880]: Ricoh Co Ltd R5C843 MMC Host Controller [1180:0843] (rev 11)
+15:00.4 System peripheral [0880]: Ricoh Co Ltd R5C592 Memory Stick Bus Host Adapter [1180:0592] (rev 11)
+15:00.5 System peripheral [0880]: Ricoh Co Ltd xD-Picture Card Controller [1180:0852] (rev 11)
+</pre>}}
+
+=== USB ===
+
+{{Codeline|<pre>
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 003 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 004 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 005 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 006 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 007 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 008 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 001 Device 004: ID 17ef:4807 Lenovo UVC Camera
+Bus 004 Device 002: ID 08ff:2810 AuthenTec, Inc. AES2810
+Bus 004 Device 004: ID 0a5c:2145 Broadcom Corp. Bluetooth with Enhanced Data Rate II
+</pre>}}
+
+== BIOS ==
+
+* Use only Intel integrated video controller, it saves power, and Intel have better support for Linux.
+* Use AHCI SATA not compatible mode.
+
+== Kernel ==
+
+{{Kernel||<pre>
+  Processor type and features  --->
+    (2) Maximum number of CPUs
+    [*] Enable KSM for page merging
+    (64) Amount of low memory, in kilobytes, to reserve for the BIOS
+    -*- MTRR (Memory Type Range Register) support
+    [*]   MTRR cleanup support
+    (1)     MTRR cleanup enable value (0-1)
+    (2)     MTRR cleanup spare reg num (0-7)
+  [*] Networking support  --->
+    -*-   Wireless  --->
+      <M>   cfg80211 - wireless configuration API
+      [*]     enable powersave by default
+      [*]     cfg80211 wireless extensions compatibility
+      [*]   Wireless extensions sysfs files
+      <M>   Common routines for IEEE802.11 drivers
+      <M>   Generic IEEE 802.11 Networking Stack (mac80211)
+    <M>   RF switch subsystem support  --->
+  Device Drivers  --->
+    [*] Block devices  ---> 
+      <M>   Packet writing on CD/DVD media
+      (8)     Free buffers for data gathering
+      [*]     Enable write caching (EXPERIMENTAL)
+      <M> Serial ATA and Parallel ATA drivers  --->
+        [*]   ATA ACPI Support
+        <M>   AHCI SATA support                                             ### you may  want to set as <*> to avoid complex initramfs
+    [*] Network device support  --->
+      [*]   Ethernet (1000 Mbit)  --->
+        <M>   Intel(R) PRO/1000 PCI-Express Gigabit Ethernet support
+      [*]   Wireless LAN  --->
+        <M>   Intel Wireless WiFi Next Gen AGN - Wireless-N/Advanced-N/Ultimate-N (iwlagn)
+    -*- I2C support  --->
+      <M>   I2C device interface
+      [*]   Autoselect pertinent helper modules
+      I2C Hardware Bus support  --->
+        <M> Intel 82801 (ICH/PCH)
+    {M} Hardware Monitoring support  --->
+      <M>   Intel Core/Core2/Atom temperature sensor
+    <M> Sound card support  --->
+      <M>   Advanced Linux Sound Architecture  --->
+        <M>   Sequencer support
+        [*]   PCI sound devices  --->
+          <M>   Intel HD Audio  --->
+            (64)  Pre-allocated buffer size for HD-audio drivers
+            [*]   Support digital beep via input layer
+            (1)     Digital beep registration mode (0=off, 1=on, 2=mute sw on/off)
+            [*]   Support jack plugging notification via input layer
+            [*]   Build Conexant HD-audio codec support
+            [*]   Aggressive power-saving on HD-audio
+            (30)    Default time-out for HD-audio power-save modesetting
+    <M> MMC/SD/SDIO card support  --->
+      <M>   MMC block device drivers
+      (8)     Number of minors per block devices
+      [*]     Use bounce buffer for simple hosts
+      <M>   Secure Digital Host Controller Interface support
+      <M>   SDHCI support on PCI bus
+</pre>}}
+
+And follow [[User:Alonbl/Thinkpad_Common]].
+
+== Packages ==
+
+{{Root|emerge net-wireless/wpa_supplicant}}
+{{Root|net-wireless/iwl5000-ucode}}
+
+== Configuration ==
+
+{{File|/etc/conf.d/net|<pre>
+modules="wpa_supplicant"
+rc_need_wlan0="firewall"    # if you are using firewall
+config_wlan0="dhcp"
+wpa_cli_wlan0="-G3600"      # this saves power
+wpa_supplicant_wlan0="-D nl80211"
+
+rc_need_eth0="firewall"    # if you are using firewall
+config_eth0="dhcp"
+</pre>}}
+
+{{Root|ln -s net.lo /etc/init.d/net.wlan0}}
+{{Root|ln -s net.lo /etc/init.d/net.eth0}}
+
+== More hardware ==
+
+* [[User:Alonbl/Intel_Integrated_Graphics_Controller|Video]]
+* [[Bluetooth]]
+* [[Lenovo_UVC_Camera|Webcam]]
+* Modem cannot be used as it conexant and these guys do not release the specs.
+* AuthenTec AES2810 (was UPEK) is supported by {{Package|sys-auth/libfprint}}, however it is unmaintained.
+
+== References ==
+
+There are other variant of documentations, however I find them difficult to maintain, as a computer is container of its hardware, so laptop article should contain minimal information and reference to its hardware components.
+
+* [[Lenovo_ThinkPad_T500/W500]]
+* [[Iwlwifi]]
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-25|type=original}}}}

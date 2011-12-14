@@ -1,0 +1,77 @@
+= AT&T USB GSM Modem =
+
+== Device ==
+
+[[File:ATT_USB_GSM_Modem.jpg|200px]]
+
+USB
+{{Codeline|<pre>
+1199:68a3 Sierra Wireless, Inc. 
+</pre>}}
+
+== Installation ==
+
+{{Kernel||<pre>
+  Device Drivers  --->
+    SCSI device support  --->
+      {M} SCSI device support
+      <M> SCSI disk support
+    [*] USB support  --->
+      <M>   USB Mass Storage support
+      <M>   USB Serial Converter support  --->
+        <M>   USB Sierra Wireless Driver
+</pre>}}
+
+You should also configure the system to run PPP.&nbsp; See [[PPP_Client|how to configure ppp client]].
+
+== Network configuration ==
+
+Add:
+{{File|/etc/conf.d/net|<pre>
+rc_need_ppp2="firewall"                  # optional, if you use firewall
+config_ppp2="ppp"
+link_ppp2="/dev/ttyUSB4"
+pppd_ppp2="noauth defaultroute usepeerdns lock mru 296 mtu 296"
+phone_number_ppp2="*99***1#"
+isp_ppp2="isp.cingular"
+
+chat_ppp2="
+ABORT BUSY
+ABORT ERROR
+ABORT 'NO ANSWER'
+ABORT 'NO CARRIER'
+ABORT 'NO DIALTONE'
+ABORT 'Invalid Login'
+ABORT 'Login incorrect'
+TIMEOUT 5
+'' 'ATZ'
+OK AT+cfun=1
+OK AT+cgreg=1
+OK AT+CGDCONT=1,\\\"IP\\\",\\\"${isp_ppp2}\\\"
+OK AT
+OK 'ATDT\T'
+TIMEOUT 60
+CONNECT ''
+TIMEOUT 5
+'~--' ''"
+</pre>}}
+
+{{Root|ln -s net.lo /etc/init.d/net.ppp2}}
+
+== Manage ==
+
+{{Root|/etc/init.d/net.ppp2 start}}
+{{Root|/etc/init.d/net.ppp2 stop}}
+
+== Reference ==
+
+http://mycusthelp.net/SIERRAWIRELESS/_cs/AnswerDetail.aspx?aid=5
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2011-11-17|type=original}}}}
+
+[[Category:Hardware]]
+[[Category:Network]]
