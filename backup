@@ -1,0 +1,7 @@
+#!/bin/sh
+mkdir tmp
+cd tmp
+curl 'http://en.gentoo-wiki.com/wiki/User:Alonbl/Index' | grep raw | sed -e 's/.*href="\([^"]*\).*/\1/' -e 's/&amp;/\&/g' | while read f; do wget "$f"; done
+find . -type f -name '*raw' | while read f; do mv "$f" "$(echo "$f" | sed 's/.*=\(.*\)&.*/\1.wiki/')"; done
+cd ..
+mv tmp/*.wiki wiki
