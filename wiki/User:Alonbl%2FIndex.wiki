@@ -31,6 +31,7 @@
 * {{User:Alonbl/WikiBackup|Linux_Disk_Encryption_Using_LoopAES_And_SmartCards}}
 * {{User:Alonbl/WikiBackup|CIFS_Kerberos}}
 * {{User:Alonbl/WikiBackup|Suspend_To_Disk_Using_uswsusp_and_genkernel}}
+* {{User:Alonbl/WikiBackup|Non_Root_Xorg-Server}}
 
 === Networking ===
 

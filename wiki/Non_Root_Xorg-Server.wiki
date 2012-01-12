@@ -1,0 +1,159 @@
+= Non Root Xorg-Server =
+
+For some starange reason, xorg-server developers do not perform this final step toward non root xorg-server, although kernel and all other components are ready.
+
+The gap is very small, and is opurtunity for all that do not like unneeded root complex processes running on their system.
+
+== Patches ==
+
+{{File|xorg-server-1.11.2-none-root.patch|<pre>
+diff --git a/hw/xfree86/os-support/linux/lnx_video.c b/hw/xfree86/os-support/linux/lnx_video.c
+index 3d45511..98bbad8 100644
+--- a/hw/xfree86/os-support/linux/lnx_video.c
++++ b/hw/xfree86/os-support/linux/lnx_video.c
+@@ -501,6 +501,9 @@ xf86EnableIO(void)
+        if (ExtendedEnabled)
+                return TRUE;
+
++       if (getenv("XORGSERVER_NONE_ROOT") != NULL)
++               return TRUE;
++
+ #if defined(__powerpc__)
+        ioBase_phys = syscall(__NR_pciconfig_iobase, 2, 0, 0);
+</pre>}}
+
+
+{{File|xorg-server-1.11.2-r2.ebuild|<pre>
+--- xorg-server-1.11.2-r2.ebuild        2011-12-27 23:01:29.000000000 +0200
++++ xorg-server-1.11.2-r2.ebuild        2012-01-10 23:48:08.372447095 +0200
+@@ -111,6 +111,7 @@ PATCHES=(
+        "${UPSTREAMED_PATCHES[@]}"
+        "${FILESDIR}"/${PN}-disable-acpi.patch
+        "${FILESDIR}"/${PN}-1.9-nouveau-default.patch
++       "${FILESDIR}"/${PN}-1.11.2-none-root.patch
+ )
+
+ pkg_pretend() {
+@@ -151,7 +153,7 @@ pkg_setup() {
+                $(use_with doc xmlto)
+                --sysconfdir=/etc/X11
+                --localstatedir=/var
+-               --enable-install-setuid
++               --disable-install-setuid
+                --with-fontrootdir=/usr/share/fonts
+                --with-xkb-output=/var/lib/xkb
+                --disable-config-hal
+</pre>}}
+
+
+'''Optional:''' If you intend to run multiple instances of Xorg, the following kernel patch is required:
+
+{{File|4200-drm-non-root.patch|<pre>
+--- a/drivers/gpu/drm/drm_drv.c 2012-01-11 21:10:48.238484914 +0200
++++ b/drivers/gpu/drm/drm_drv.c 2012-01-11 21:11:25.429450927 +0200
+@@ -82,8 +82,8 @@ static struct drm_ioctl_desc drm_ioctls[
+        DRM_IOCTL_DEF(DRM_IOCTL_SET_SAREA_CTX, drm_setsareactx, DRM_AUTH|DRM_MASTER|DRM_ROOT_ONLY),
+        DRM_IOCTL_DEF(DRM_IOCTL_GET_SAREA_CTX, drm_getsareactx, DRM_AUTH),
+ 
+-       DRM_IOCTL_DEF(DRM_IOCTL_SET_MASTER, drm_setmaster_ioctl, DRM_ROOT_ONLY),
+-       DRM_IOCTL_DEF(DRM_IOCTL_DROP_MASTER, drm_dropmaster_ioctl, DRM_ROOT_ONLY),
++       DRM_IOCTL_DEF(DRM_IOCTL_SET_MASTER, drm_setmaster_ioctl, 0),
++       DRM_IOCTL_DEF(DRM_IOCTL_DROP_MASTER, drm_dropmaster_ioctl, 0),
+ 
+        DRM_IOCTL_DEF(DRM_IOCTL_ADD_CTX, drm_addctx, DRM_AUTH|DRM_ROOT_ONLY),
+        DRM_IOCTL_DEF(DRM_IOCTL_RM_CTX, drm_rmctx, DRM_AUTH|DRM_MASTER|DRM_ROOT_ONLY),
+</pre>}}
+
+== Scripts ==
+
+The following is needed in order to startx in none previliged mode.
+
+{{File|/usr/local/bin/my-startx|<pre>
+#!/bin/sh
+
+display="$1"
+
+sudo my-startx-perm "${display}" &
+PPP="$!"
+sleep 1
+XORGSERVER_NONE_ROOT=1 setsid startx -- ${display} -logfile /tmp/xorg.$$.log &
+sleep 5
+
+exec kill -9 "${PPID}" # exit current shell
+</pre>}}
+
+The following is needed to temporary fix privileges of ttys, not sure why xorg-server is using tty0, and why -novtswitch is not working.
+
+{{File|/usr/local/bin/mystartx-perm|<pre>
+#!/bin/sh
+
+die() {
+        local m="$1"
+        echo "FATAL: ${m}" >&2
+        exit 1
+}
+
+change() {
+        local user="$1"
+        chown "${user}" /dev/tty0 "${tty}" #/dev/input/event*
+}
+
+display="$1"
+
+case "${display}" in
+        :[0-4])
+                index="${display#:}"
+        ;;
+        *)
+                index="0"
+        ;;
+esac
+
+while killall -q -0 "$0"; do
+        sleep 1
+done
+
+tty="/dev/tty$((7+${index}))"
+
+[ "$(stat --printf="%u\n" "${tty}")" = 0 ] || die "invalid init perm"
+change "${SUDO_USER}"
+sleep 5
+change root
+
+exit 0
+</pre>}}
+
+Enable execute the my-startx-perm using sudo.
+
+{{File|/etc/sudoers.d/xorg-server|<pre>
+ALL ALL=(ALL) NOPASSWD: /usr/local/bin/my-startx-perm
+</pre>}}
+
+Enable access to input devices, there must be a better way to do this, enabling this allows any application to tap keyboard/mouse.
+
+{{File|/etc/udev/rules.d/60-xorg-server.rules|<pre>
+SUBSYSTEM=="input",MODE="0666"
+</pre>}}
+
+Add:
+ Option "GrabDevice" "True"
+
+To your input devices so nobody can tap the active devices.
+
+== Test ==
+
+Create ~/.xorg.conf with relevant contents.
+
+As root:
+{{Root|/etc/init.d/xdm stop}}
+
+As user:
+{{Command|my-startx}}
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+[[Category:Security]]
+[[Category:Desktop Environment]]
+{{AuthorList|{{Author|Alon Bar-Lev|2012-01-11|type=original}}}}

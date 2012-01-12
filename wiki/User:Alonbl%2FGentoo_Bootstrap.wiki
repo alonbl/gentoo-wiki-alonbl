@@ -11,7 +11,7 @@ Boot from latest Gentoo install CD.
 Make sure you have working network before start.
 
 Create /etc/init.d/net.eth0 if not exist (recent install CDs dropped this for some reason):
-{{Root|ln -s net.lo /etc/conf.d/net.eth0}}
+{{Root|ln -s net.lo /etc/init.d/net.eth0}}
 
 {{Root|/etc/init.d/net.eth0 start}}
 

@@ -129,6 +129,7 @@ my_standard_inet() {
         client  gmailsmtp       accept
         client  gmailimap       accept
         client  gmailpop3       accept
+}
 
 interface "eth+ wlan+ ppp+" inet1
         policy  reject

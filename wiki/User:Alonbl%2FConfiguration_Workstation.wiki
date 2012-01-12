@@ -94,6 +94,8 @@ I use [[Firewall_Using_Firehol|firewall]] for all of my interfaces, with outgoin
 
 To avoid man-in-the-middle attacks on portage synchronization, I always use [[Secured_Portage_Sync|signed snapshots]].
 
+My X is running as [[Non_Root_Xorg-Server|non root]], not xdm.
+
 == Power Management ==
 
 I use [[Userspace_software_suspend|Usermode suspend]], with {{Package|sys-power/hibernate-script}} as wrapper, and
