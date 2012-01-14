@@ -5,3 +5,4 @@ curl 'http://en.gentoo-wiki.com/wiki/User:Alonbl/Index' | grep raw | sed -e 's/.
 find . -type f -name '*raw' | while read f; do mv "$f" "$(echo "$f" | sed 's/.*=\(.*\)&.*/\1.wiki/')"; done
 cd ..
 mv tmp/*.wiki wiki
+rm -fr tmp
