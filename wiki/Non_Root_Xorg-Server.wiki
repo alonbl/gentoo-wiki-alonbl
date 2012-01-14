@@ -115,10 +115,15 @@ done
 
 tty="/dev/tty$((7+${index}))"
 
+cleanup() {
+        change root
+}
+
+trap cleanup 0
+
 [ "$(stat --printf="%u\n" "${tty}")" = 0 ] || die "invalid init perm"
 change "${SUDO_USER}"
 sleep 5
-change root
 
 exit 0
 </pre>}}

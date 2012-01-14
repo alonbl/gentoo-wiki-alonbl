@@ -1,12 +1,10 @@
 Userspace software suspend, also known as µswsusp or uswsusp, is a system for hibernating/suspending. It supports suspend-to-RAM, suspend-to-disk, and "suspend-to-both".
 
-Uswsusp is an altenative to [[TuxOnIce]] (Suspend2), which is the suspend-to-disk tool recommended by the [http://www.gentoo.org/doc/en/power-management-guide.xml#doc_chap7 Gentoo Power Management Guide].
-
-Uswsusp is the successor to swsusp, a suspend-to-disk mechanism built into 2.6 kernels that notably lacked support for LVM.
+Uswsusp is an altenative to [[TuxOnIce]] (Suspend2), which is the suspend-to-disk tool recommended by the [http://www.gentoo.org/doc/en/power-management-guide.xml#doc_chap7 Gentoo Power Management Guide]. It is the successor to swsusp, a suspend-to-disk mechanism built into 2.6 kernels that notably lacked support for LVM.
 
 == Comparison with TuxOnIce ==
 
-TuxOnIce has many more [http://www.tuxonice.net/features features] than uswsusp, like writing to multiple swap devices. The only big feature advantage of uswsusp is "suspend-to-both", where the system state is recorded to both RAM and disk so the computer can resume quickly while staying resilient to power loss.
+TuxOnIce has many more [http://www.tuxonice.net/features features] than uswsusp, like writing to multiple swap devices. An interesting feature that both uswsusp and TuxOnIce have is "suspend-to-both", where the system state is recorded to both RAM and disk so the computer can resume quickly while staying resilient to power loss. On uswsusp, "suspend-to-both" is a explicit method to suspend, ready to use; on TuxOnIce it requires a bit of configuration: user needs to manually set {{Path|/sys/power/tuxonice/powerdown_method}} to {{Codeline|3}} or do it by a helper, like [[Userspace_software_suspend#Hibernate_script|hibernate-script]] which can be set with option {{Codeline|PowerdownMethod 3}}.
 
 Uswsusp has, arguably, a better design than TuxOnIce, as most of its code is in userland rather than in the kernel. TuxOnIce requires patches to the mainline kernel, meaning you have to either run {{Package|sys-kernel/tuxonice-sources|direct=yes}} or patch your kernel by hand. Running tuxonice-sources may not be an option if you're already running a patched kernel (xen-sources, hardened-sources, etc.) or you need a newer kernel version than the tuxonice-sources ebuilds offer.
 
