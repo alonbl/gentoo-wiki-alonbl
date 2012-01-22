@@ -190,7 +190,7 @@ Validate ticket:
 
 ==== Environment ====
 
-{{File|~/.smb.conf|<pre>
+{{File|~/.smb/smb.conf|<pre>
 [global]
         workgroup = MY_DOMAIN
         realm = MY_DOMAIN.COM
@@ -198,14 +198,8 @@ Validate ticket:
         client use spnego = yes
 </pre>}}
 
-Add:
-{{File|~/.profile|<pre>
-export SMB_CONF_PATH=~/.smb.conf
-</pre>}}
-
 ==== Test ====
 
-{{Command|. /etc/profile}}
 {{Command|smbclient -k //server/share}}
 
 == Maintainer ==
