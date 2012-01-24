@@ -124,8 +124,7 @@ Create gitusers group:
 {{Root|groupadd gitusers}}
 
 For each Git repository REPOS:
-{{Root|find "${REPOS}" -type d | xargs setfacl -R -m d:g:gitusers:rwX}}
-{{Root|setfacl -R -m g:gitusers:rwX "${REPOS}"}}
+{{Root|setfacl -R -d -m g:gitusers:rwX "${REPOS}"}}
 
 The above will set default read and write access to gitusers groups for every file created within repository.
 
