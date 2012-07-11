@@ -1,0 +1,25 @@
+When enrolling a certificate using web interface, Verisign and others requires Microsoft platform. The Microsoft platform generate two files: SPC file which is UCS-2 bas64 blob of PKCS#7 certificate chain, and PVK which is Microsoft proprietary format of private key.
+
+The following utility convert these files into standard PKCS#12 file.
+
+{{File|spc+pvk-to-p12.sh|<pre>
+#!/bin/sh
+#
+# Convert SPC+PVK to standard PKCS#12
+# Written by Alon Bar-Lev <alon.barlev@gmail.com>
+#
+
+spc="$1"
+pvk="$2"
+import_pass="$3"
+export_pass="$4"
+
+if [ -z "${export_pass}" ]; then
+	echo "usage: $0 spc pvk in-pass out-pass"
+	exit 1
+fi
+
+openssl rsa -in "${pvk}" -inform PVK -passin "pass:${import_pass}" -out my.rsa -passout "pass:${export_pass}"
+
+iconv -f UCS2 -t UTF8 "${spc}" | sed 's/\(...........\)/\1\n/g' | openssl enc -d -a | openssl pkcs7 -inform DER -print_certs | openssl pkcs12 -export -inkey my.rsa -passin "pass:${export_pass}" -out my.p12 -passout "pass:${export_pass}"
+</pre>}}
