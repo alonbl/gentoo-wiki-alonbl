@@ -525,6 +525,21 @@ Networking support  --->
 Recent Linux kernels have two Firewire stacks to choose from.
 There's no specific comment to make for the T400/T500/W500.
 
+===Integrated camera===
+
+The integrated camera can be handled by the uvcvideo driver.
+Enable the following options in your kernel:
+{{Kernel|Integrated camera config|<pre>
+Device Drivers  --->
+    <*> Multimedia support  --->
+        <*> Video For Linux
+        [*]  Load and attach frontend and tuner driver modules as needed
+        [*]  Video capture adapters  --->
+             [*]  V4L USB devices  --->
+                  <*> USB Video Class (UVC)
+                  [*]        UVC input events device support
+</pre>}}
+
 ===Laptopicities===
 
 There's a driver in the kernel for ThinkPad specific stuff.

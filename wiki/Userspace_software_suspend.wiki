@@ -102,7 +102,7 @@ cp /bin/busybox /sbin/cryptsetup /usr/lib64/suspend/resume bin
 cp /sbin/lvm.static bin/lvm
 ln -s busybox bin/sh
 ln -s lvm bin/vgchange
-cp -a /dev/console /dev/null /dev/sda2 /dev/snapshot /dev/urandom dev
+cp -a /dev/console /dev/null /dev/sda2 /dev/snapshot /dev/random /dev/urandom dev
 ln -s ../console dev/vc/0
 cp /etc/suspend.conf etc
 cp /etc/lvm/lvm.conf etc/lvm
@@ -173,6 +173,9 @@ Uswsusp uses three userspace utilities -- s2ram, s2disk, and s2both -- to execut
 === Suspend-to-disk / Suspend-to-both ===
 To suspend-to-disk (or suspend-to-both, depending on how you configured {{Path|/etc/hibernate/hibernate.conf}}), just run hibernate as root:
 {{Root|hibernate}}
+
+Actually {{Path|/etc/hibernate/hibernate.conf}} refers to 
+{{Path|/etc/hibernate/disk.conf}} which tries to load {{Path|ususpend-disk.conf}}. You may want to change this line to {{Path|ususpend-both.conf}} to use suspend-to-both.
 
 === Suspend-to-RAM ===
 To suspend-to-RAM, run:

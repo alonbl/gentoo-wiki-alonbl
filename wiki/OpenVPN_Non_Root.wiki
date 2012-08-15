@@ -21,6 +21,22 @@ The control of the daemon is done using the OpenVPN management interface.
 
 It is very recommended to configure firewall on your computer, see [[Firewall_Using_Firehol|firehol configuration]].
 
+Add:
+{{File|/etc/conf.d/net|<pre>
+rc_need_vpn0="firewall" # optional, if you setup firewall.
+rc_provide_vpn0="!net"
+tuntap_vpn0="tun"
+iproute2_vpn0="group users"
+config_vpn0="null"
+txqueuelen_vpn0="100"
+metric_vpn0="1"
+</pre>}}
+
+{{Root|<nowiki>ln -s net.lo /etc/init.d/net.vpn0
+rc-update add net.vpn0 default
+/etc/init.d/net.vpn0 start
+</nowiki>}}
+
 {{File|~/openvpn/my-ip|<pre>
 #!/bin/sh
 sudo /sbin/ip $@
@@ -71,23 +87,10 @@ Defaults        env_keep += "foreign_option_4"
 Defaults        env_keep += "foreign_option_5"
 Defaults        env_keep += "dev"
 
-%myusers ALL=(ALL) NOPASSWD: /etc/openvpn/up.sh
-%myusers ALL=(ALL) NOPASSWD: /etc/openvpn/down.sh
-%myusers ALL=(ALL) NOPASSWD: /sbin/ip
+%users ALL=(ALL) NOPASSWD: /etc/openvpn/up.sh
+%users ALL=(ALL) NOPASSWD: /etc/openvpn/down.sh
+%users ALL=(ALL) NOPASSWD: /sbin/ip
 </pre>}}
-
-Add:
-{{File|/etc/conf.d/net|<pre>
-rc_need_vpn0="firewall" # optional, if you setup firewall.
-rc_provide_vpn0="!net"
-tuntap_vpn0="tun"
-openvpn_vpn0="--group users"
-config_vpn0="null"
-txqueuelen_vpn0="100"
-metric_vpn0="1"
-</pre>}}
-
-{{Root|ln -s net.lo /etc/init.d/net.vpn0}}
 
 Until {{bug|391175}} is resolved, update the following to have DNS lookup of vpn0 be prioritized:
 {{File|/etc/resolvconf.conf|<pre>

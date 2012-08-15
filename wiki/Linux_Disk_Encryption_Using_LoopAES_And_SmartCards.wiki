@@ -173,7 +173,7 @@ This next step goes over all of /dev/sda3 (root partition) and encrypts it. Be s
 Run the following command:
 
 {{Root|mkdir /mnt}}
-{{Root|<nowiki>mount -o ro /dev/sda1 /mnt</nowiki}}
+{{Root|<nowiki>mount -o ro /dev/sda1 /mnt</nowiki>}}
 {{Root|<nowiki>dd if=/dev/sda3 bs=64k | \
         aespipe -G / -K /mnt/root.gpg -e AES256 | \
         dd of=/dev/sda3 bs=64k conv=notrunc</nowiki>}}

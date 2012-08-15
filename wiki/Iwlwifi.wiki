@@ -263,7 +263,7 @@ Support is added since kernel 2.6.26.
 This error indicate a firmware version/filename mismatch. Just rename the file to whatever iwlwifi displays in this case: iwlwifi-4965-1.ucode
 If this fails, try an alternate version, perhaps net-wireless/iwl4965-ucode-228.57.1.21.
 
-=== Problem with wpa_supplicant and asociation ===
+=== Problem with wpa_supplicant and association ===
 
 If the AP SSID is hidden or there multiple SSIDs with the same name, be sure that ap_scan does not exist or is commented out in /etc/wpa_supplicant/wpa_supplicant.conf.
 

@@ -1,0 +1,31 @@
+= RSA SecurID SID800 =
+
+== Device ==
+
+[[File:RSA_SecurID_SID800.png]]
+
+USB
+{{Codeline|<pre>
+15e1:2007 RSA RSA SecurID (R) Authenticator
+</pre>}}
+
+== Installation ==
+
+Use portage overlay: [http://github.com/alonbl/alon-barlev-overlay http://github.com/alonbl/alon-barlev-overlay].
+
+=== pcsc-lite ===
+
+{{Root|emerge sys-apps/pcsc-lite app-crypt/RSA_SecurID_getpasswd}}
+
+{{Root|/etc/init.d/pcscd start}}
+
+=== openct ===
+
+{{Root|emerge dev-libs/openct app-crypt/RSA_SecurID_getpasswd-openct}}
+
+{{Root|/etc/init.d/openct start}}
+
+== Usage ==
+
+{{Command|RSA_SecurID_getpasswd
+<pre>123456</pre>}}

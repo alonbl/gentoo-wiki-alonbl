@@ -23,6 +23,7 @@
 * {{User:Alonbl/WikiBackup|Bluetooth}}
 * {{User:Alonbl/WikiBackup|Bluetooth_Modem}}
 * {{User:Alonbl/WikiBackup|Sony_DualShock3_SixAxis}}
+* {{User:Alonbl/WikiBackup|RSA_SecurID}}
 
 === Security ===
 
@@ -32,6 +33,7 @@
 * {{User:Alonbl/WikiBackup|CIFS_Kerberos}}
 * {{User:Alonbl/WikiBackup|Suspend_To_Disk_Using_uswsusp_and_genkernel}}
 * {{User:Alonbl/WikiBackup|Non_Root_Xorg-Server}}
+* {{User:Alonbl/WikiBackup|User:Alonbl/Convert_SPC_PVK}}
 
 === Networking ===
 
@@ -40,6 +42,7 @@
 * {{User:Alonbl/WikiBackup|Firewall_Using_Firehol}}
 * {{User:Alonbl/WikiBackup|OpenVPN_Server}}
 * {{User:Alonbl/WikiBackup|OpenVPN_Non_Root}}
+* {{User:Alonbl/WikiBackup|Vpnc_Non_Root}}
 * {{User:Alonbl/WikiBackup|VM_Tap_Networking}}
 * {{User:Alonbl/WikiBackup|PPP_Client}}
 * {{User:Alonbl/WikiBackup|PPPoE_Client}}

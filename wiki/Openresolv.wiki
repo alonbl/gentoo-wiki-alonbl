@@ -39,18 +39,14 @@ nameserver 192.168.1.1
 Force update:
 {{Root|resolvconf -u}}
 
-== Bugs ==
-
-Related bug which may cause loss of DNS settings after boot: {{Bug|383763}}.
-
 == Tweeks ==
 
 === Setting Interface Metrics ===
 
-Until {{Bug|365999}} resolved, setting interface metrics should be done via /etc/resolvconf.conf
+If [[OpenVPN_Non_Root|OpenVPN]]({{Bug|391175}}) is used or any VPN that does not support interface metrics, interface metrics should be set via /etc/resolvconf.conf
 
-For example, if you have VPN, such as [[OpenVPN_Non_Root|OpenVPN]], set vpn interface to have higher priority than other interfaces:
-{{File|/etc/resolvconf,conf|Add:|<pre>
+For example, set vpn interface to have higher priority than other interfaces:
+{{File|/etc/resolvconf,conf|<pre>
 interface_order="lo lo[0-9]* vpn*"
 </pre>}}
 

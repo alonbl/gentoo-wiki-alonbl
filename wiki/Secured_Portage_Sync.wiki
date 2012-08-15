@@ -12,7 +12,9 @@ One alternative is a secure sync using emerge-webrsync, which uses the HTTP prot
 
 {{Root|mkdir /etc/portage/gnupg}}
 {{Root|chmod 0700 /etc/portage/gnupg}}
-{{Root|<nowiki>GNUPGHOME=/etc/portage/gnupg gpg --keyserver subkeys.pgp.net --recv-keys 96D8BF6D</nowiki>}}
+{{Root|<nowiki>GNUPGHOME=/etc/portage/gnupg gpg --keyserver subkeys.pgp.net --recv-keys 0x96D8BF6D</nowiki>}}
+{{Root|<nowiki>GNUPGHOME=/etc/portage/gnupg gpg --fingerprint 0x96D8BF6D</nowiki>}}
+Be sure to check the double check the fingerprint on the [http://www.gentoo.org/proj/en/releng/#doc_chap5 release engineering page].
 
 Add:
 {{File|/etc/make.conf|<pre>

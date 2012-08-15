@@ -4,7 +4,7 @@ Most of recent VMs support Linux native tap driver. A simple integration with Op
 
 What you get is the following setup:
 
-  Host(br0) <--+--> (vm0)VM0
+  Host(vbr0) <--+--> (vm0)VM0
      |         |
     NAT        +--> (vm1)VM1
      |
@@ -34,23 +34,23 @@ network directly.
     <M>   Host kernel accelerator for virtio net (EXPERIMENTAL)
 </pre>}}
 
-{{Root|emerge sys-apps/usermode-utilities net-misc/bridge-utils}}
+{{Root|emerge net-misc/bridge-utils}}
 
 Add:
 {{File|/etc/conf.d/net|<pre>
 tuntap_vm0="tap"
-tunctl_vm0="-g users"
+iproute2_vm0="group users"
 config_vm0="null"
 
 tuntap_vm1="tap"
-tunctl_vm1="-g users"
+iproute2_vm1="group users"
 config_vm1="null"
 
-rc_provide_br0="!net"
-rc_need_br0="firewall net.vm0 net.vm1" # firewall is optional
-bridge_br0="vm0 vm1"
-config_br0="192.168.151.1/24"
-brctl_br0="setfd 0
+rc_provide_vbr0="!net"
+rc_need_vbr0="firewall net.vm0 net.vm1" # firewall is optional
+bridge_vbr0="vm0 vm1"
+config_vbr0="192.168.151.1/24"
+brctl_vbr0="setfd 0
 sethello 0
 stp off"
 </pre>}}
@@ -68,14 +68,14 @@ interface "eth+ wlan+ ppp+" inet1
 
         client  all             accept
 
-interface "br0" local1
+interface "vbr0" local1
         policy  reject
         protection              strong  10/sec  10
         server  ident           reject  with tcp-reset
 
         client  all             accept
 
-router tun_nat  inface "eth+ wlan+ ppp+" outface "br0"
+router tun_nat  inface "eth+ wlan+ ppp+" outface "vbr0"
         route   ident           reject with tcp-reset
         server  ident           reject with tcp-reset
         masquerade              reverse
@@ -85,9 +85,9 @@ router tun_nat  inface "eth+ wlan+ ppp+" outface "br0"
 
 {{Root|ln -s net.lo /etc/init.d/net.vm0}}
 {{Root|ln -s net.lo /etc/init.d/net.vm1}}
-{{Root|ln -s net.lo /etc/init.d/net.br0}}
+{{Root|ln -s net.lo /etc/init.d/net.vbr0}}
 
-{{Root|/etc/init.d/net.br0 start}}
+{{Root|/etc/init.d/net.vbr0 start}}
 
 Also recommended to install dnsmasq and use host machine as DNS source pf VMs, so VM can always find correct DNS.
 

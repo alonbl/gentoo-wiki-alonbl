@@ -28,8 +28,8 @@ Make sure you enable the {{EnableFlag|fbcondecor}} USE-flag. Also note that ther
 {{Root|emerge -avN splashutils}}
 
 == Themes ==
-Themes can be obtained by emerging {{Package|media-gfx/splash-themes-livecd}}, {{Package|media-gfx/splash-themes-gentoo}}, {{Package|media-gfx/splash-themes-livecd}} and {{Package|media-gfx/bootsplash-themes}},
-{{Root|emerge -av splash-themes-livecd splash-themes-gentoo splash-themes-livecd bootsplash-themes}}
+Themes can be obtained by emerging {{Package|media-gfx/splash-themes-livecd}}, {{Package|media-gfx/splash-themes-gentoo}}, and/or {{Package|media-gfx/bootsplash-themes}}:
+{{Root|emerge -av splash-themes-gentoo splash-themes-livecd bootsplash-themes}}
 The {{Package|media-gfx/bootsplash-themes}} package will install to {{Path|/etc/bootsplash}}, but it will convert the themes automatically to splashutils compatible themes and moves them to {{Path|/etc/splash/}} as well, so there is no need for any manual conversion.
 
 If you wish to set/preview a theme without booting you can use {{Codeline|splash_manager}}.  Note these commands must be run as root user (or sudo).
@@ -124,7 +124,7 @@ Rebuild your initrd with:
 {{Root|<nowiki>genkernel ramdisk --splash=name-of-splash --splash-res=your-resolution</nowiki>}}
 
 == External Links ==
-[http://fbsplash.berlios.de/wiki fbsplash Website]
+[http://fbsplash.alanhaggai.org/ fbsplash Website]
 
 [[ru:HOWTO fbsplash]]
 

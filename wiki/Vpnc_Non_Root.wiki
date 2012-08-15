@@ -1,0 +1,101 @@
+= vpnc Non Root =
+
+End result, user can use own tool (I use knemo) to connect/disconnect from {{Package|net-misc/vpnc}}.
+
+The logic is to create tun device and allow users to access it, and wrapping the /sbin/ip and /sbin/resolvconf
+using sudo.
+
+== Setup ==
+
+{{Kernel|Add tap|<pre>
+  Device Drivers  ---> 
+    [*] Network device support  --->
+      <M>   Universal TUN/TAP device driver support
+</pre>}}
+
+Setup portage overlay from [https://github.com/alonbl/alon-barlev-overlay here].
+
+{{Root|emerge net-misc/vpnc net-dns/openresolv}}
+
+{{Package|net-dns/openresolv}} is optional, but makes life much easier, see [[openresolv]].
+
+It is very recommended to configure firewall on your computer, see [[Firewall_Using_Firehol|firehol configuration]].
+
+Add:
+{{File|/etc/conf.d/net|<pre>
+rc_need_vpn0="firewall" # optional, if you setup firewall.
+rc_provide_vpn0="!net"
+tuntap_vpn0="tun"
+iproute2_vpn0="group users"
+config_vpn0="null"
+txqueuelen_vpn0="100"
+metric_vpn0="10"
+</pre>}}
+
+{{Root|<nowiki>ln -s net.lo /etc/init.d/net.vpn0
+rc-update add net.vpn0 default
+/etc/init.d/net.vpn0 start
+</nowiki>}}
+
+{{Command|mkdir -p ~/vpnc/run}}
+
+Add the following to your configuration:
+{{File|~/vpnc/site.conf|<pre>
+Interface name vpn0
+Local Port 0
+Pidfile /home/@USER@/vpnc/run/pid
+Script VAR_RUN="/home/@USER@/vpnc/run" ROUTE_METRIC="10" IPROUTE="sudo /sbin/ip" RESOLVCONF="sudo /sbin/resolvconf" /etc/vpnc/vpnc-script
+Xauth interactive
+</pre>}}
+
+{{File|/etc/sudoers.d/vpnc|<pre>
+%users ALL=(ALL) NOPASSWD: /sbin/ip
+%users ALL=(ALL) NOPASSWD: /sbin/resolvconf
+</pre>}}
+
+== <div id="cli">cli</div> ==
+
+Start:
+{{Command|/usr/sbin/vpnc /home/@USER@/vpnc/site.conf}}
+
+Stop:
+{{Command|<nowiki>VAR_RUN="/home/@USER@/vpnc/run" /usr/sbin/vpnc-disconnect</nowiki>}}
+
+== knemo ==
+
+=== Dialogs ===
+
+{{File|~/vpnc/vpnc-getpass|<pre>
+#!/bin/sh
+
+die() {
+        local m="$1"
+        echo "FATAL: $1" >&2
+        exit 1
+}
+
+prompt="$1"
+
+[ -z "${prompt}" ] && die "usage: $0 prompt"
+
+kdialog --title "vpnc" --password "$prompt" || die "password"
+</pre>}}
+
+Add the following to your configuration:
+{{File|~/vpnc/site.conf|<pre>
+Password Program /home/@USER@/vpnc/vpnc-getpass
+</pre>}}
+
+=== Context menu ===
+
+Start/stop same as [[#cli|cli]] above.
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2012-08-15|type=original}}}}
+
+[[Category:Software]]
+[[Category:Security]]
+[[Category:Network]]
