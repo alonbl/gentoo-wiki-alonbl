@@ -24,6 +24,8 @@
 * {{User:Alonbl/WikiBackup|Bluetooth_Modem}}
 * {{User:Alonbl/WikiBackup|Sony_DualShock3_SixAxis}}
 * {{User:Alonbl/WikiBackup|RSA_SecurID}}
+* {{User:Alonbl/WikiBackup|USB_SATA_JM20337}}
+* {{User:Alonbl/WikiBackup|USB_SATA_SPIF225A}}
 
 === Security ===
 

@@ -29,3 +29,12 @@ Use portage overlay: [http://github.com/alonbl/alon-barlev-overlay http://github
 
 {{Command|RSA_SecurID_getpasswd
 <pre>123456</pre>}}
+
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2012-07-11|type=original}}}}
+
+[[Category:Hardware]]

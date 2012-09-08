@@ -78,12 +78,17 @@ cpufreq-powersave
 
 === X11 ===
 
-To use scroll add the following to your mouse section:
+To use scroll add the following:
 
-{{File|/etc/X11/xorg.conf|<pre>
+{{File|/etc/X11/xorg.conf.d/30-trackpoint.conf|<pre>
+Section "InputClass"
+        Identifier      "MyMouse"
+        MatchProduct    "TrackPoint"
+
         Option          "Buttons"               "3"
         Option          "EmulateWheel"
         Option          "EmulateWheelButton"    "2"
+EndSection
 </pre>}}
 
 === hdaps ===

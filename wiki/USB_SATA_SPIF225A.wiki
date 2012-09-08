@@ -1,0 +1,32 @@
+= USB-SATA Bridge SPIF225A =
+
+{{Note|This device supports disks larger than 2.2T.}}
+
+== Device ==
+
+[[File:USB_SATA_SPIF225A.jpg|200px]]
+
+USB
+{{Codeline|<pre>
+152d:2329 JMicron Technology Corp. / JMicron USA Technology Corp. transcend storejet 25P
+</pre>}}
+
+Unlike other devices, specifications is [http://www.datasheet4u.net/datasheet/S/P/I/SPIF225A_Sunplus.pdf.html available].
+
+== Installation ==
+
+Standard USB mass storage device with automatic quirks.
+
+== Issues ==
+
+Device must be plugged-in before hard disk power is connected.
+
+Device comes without power supply, so I had to buy [[USB_SATA_JM20337]] just for the power supply.
+
+== Maintainer ==
+
+[[User:Alonbl|Alon Bar-Lev]]
+
+{{AuthorList|{{Author|Alon Bar-Lev|2012-09-06|type=original}}}}
+
+[[Category:Hardware]]

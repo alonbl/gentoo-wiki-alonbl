@@ -1,0 +1,20 @@
+= USB-SATA Bridge JM20337 =
+
+{{Warning|ATTENTION: This device does not work with disks larger than 2.2T.}}
+
+Refer to [http://comments.gmane.org/gmane.linux.usb.general/62798 this] thread.
+
+== Device ==
+
+[[File:USB_SATA_JM20337.jpg]]
+
+USB
+{{Codeline|<pre>
+152d:2338 JMicron Technology Corp. / JMicron USA Technology Corp. JM20337 Hi-Speed USB to SATA & PATA Combo Bridge
+</pre>}}
+
+== Installation ==
+
+Standard USB mass storage device.
+
+[[Category:Hardware]]
