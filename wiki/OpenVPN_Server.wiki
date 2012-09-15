@@ -17,7 +17,7 @@ This page is provided as OEM, a complete setup.
       <M>   Universal TUN/TAP device driver support
 </pre>}}
 
-{{File|/etc/make.conf|<pre>
+{{File|/etc/portage/make.conf|<pre>
 CFLAGS="-O2 -pipe -mtune=native -fomit-frame-pointer -pipe"
 CXXFLAGS="${CFLAGS}"
 MAKEOPTS="-j4"

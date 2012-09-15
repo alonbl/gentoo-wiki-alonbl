@@ -24,7 +24,7 @@ Driver is inteldrmfb, for example, use the following kernel parameters:
 
 == X11 ==
 
-{{File|/etc/make.conf|<pre>
+{{File|/etc/portage/make.conf|<pre>
 USE="${USE} xv"
 VIDEO_CARDS="intel"
 </pre>}}

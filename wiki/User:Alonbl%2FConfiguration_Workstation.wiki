@@ -107,7 +107,7 @@ I use [[Userspace_software_suspend|Usermode suspend]], with {{Package|sys-power/
 
 Based on [[User:Alonbl/Gentoo_Configuration_Common|Gentoo common configuration]].
 
-{{File|/etc/make.conf|<pre>
+{{File|/etc/portage/make.conf|<pre>
 USE="${USE} bluetooth alsa joystick"
 USE="${USE} kde qt4 plasma X xv xinerama opengl"
 USE="${USE} jpeg jpeg2k tiff png svg"
@@ -123,8 +123,8 @@ LINGUAS="en he"
 PORTDIR_OVERLAY="/usr/local/portage/local /usr/local/portage/alon-barlev-portage ${PORTDIR_OVERLAY}"
 </pre>}}
 
-{{File|/etc/make.profile|<pre>
-->../var/gentoo/portage/profiles/default/linux/amd64/10.0/no-multilib
+{{File|/etc/portage/make.profile|<pre>
+->../../var/gentoo/portage/profiles/default/linux/amd64/10.0/no-multilib
 </pre>}}
 
 Licenses: [[User:Alonbl/Gentoo_Licensing]]

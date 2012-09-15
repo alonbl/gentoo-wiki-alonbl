@@ -20,7 +20,7 @@ nls-cp1255
 
 = System =
 
-{{File|/etc/make.conf|<pre>
+{{File|/etc/portage/make.conf|<pre>
 USE="${USE} bidi"
 LINGUAS="en he"
 </pre>}}

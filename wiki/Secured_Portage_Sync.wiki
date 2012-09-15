@@ -17,7 +17,7 @@ One alternative is a secure sync using emerge-webrsync, which uses the HTTP prot
 Be sure to check the double check the fingerprint on the [http://www.gentoo.org/proj/en/releng/#doc_chap5 release engineering page].
 
 Add:
-{{File|/etc/make.conf|<pre>
+{{File|/etc/portage/make.conf|<pre>
 PORTAGE_GPG_DIR="/etc/portage/gnupg"
 FEATURES="webrsync-gpg parallel-fetch userfetch userpriv usersandbox"
 SYNC="" # so emerge --sync won't work
