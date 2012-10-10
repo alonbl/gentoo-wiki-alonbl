@@ -85,6 +85,7 @@ sys-apps/loop-aes-losetup static
 app-crypt/aespipe static
 sys-fs/loop-aes keyscrub
 app-crypt/gnupg static # optional if file based key is used
+app-crypt/aescrypt static # optional if file based key is used
 </pre>}}
 
 sys-apps/loop-aes-losetup is available via overlay at http://sites.google.com/site/alonbarlev/utilities.
@@ -178,6 +179,19 @@ Run the following command:
         aespipe -G / -K /mnt/root.gpg -e AES256 | \
         dd of=/dev/sda3 bs=64k conv=notrunc</nowiki>}}
 
+==== Encryption using aescrypt ====
+
+Run the following command:
+
+{{Root|mkdir /mnt}}
+{{Root|<nowiki>mount -o ro /dev/sda1 /mnt</nowiki>}}
+{{Root|aescrypt -o /tmp/key1 /mnt/key1.aes}}
+{{Root|<nowiki>dd if=/dev/sda3 bs=64k | \
+        aespipe -e AES256 -p 8 8< /tmp/key1 | \
+        dd of=/dev/sda3 bs=64k conv=notrunc</nowiki>}}
+{{Root|<nowiki>dd if=/dev/zero of=/tmp/key1 count=10000 conv=notrunc</nowiki>}}
+{{Root|rm /tmp/key1}}
+
 ==== Encryption using PKCS#11 cryptographic token ====
 
 First start PKCS#11 reader support, usually the following commands will do:
@@ -199,12 +213,12 @@ Now perform the actual encryption, don't be alarmed that the key is exported to 
 === First success boot ===
 
 If you use gpg key, reboot using the following arguments:
- root=/dev/loop5 initrd_util=gpgfile:/dev/sda1:/root.gpg initrd_devices=/dev/sda3 \
-        initrd_loopstart=5 initrd_encmode=loop-aes
+ root=/dev/loop5 initrd_encmode=loop-aes:AES256 initrd_util=gpgfile:/dev/sda1:ext2:/root.gpg \
+        initrd_devices=/dev/sda3 initrd_loopstart=5
 
 If you use PKCS#11 cryptographic token, reboot using the following arguments:
-  root=/dev/loop5 initrd_util=pkcs11:DISK:MY initrd_readers=openct initrd_devices=/dev/sda3 \
-	initrd_loopstart=5 initrd_encmode=loop-aes</nowiki>}}
+  root=/dev/loop5 initrd_encmode=loop-aes:AES256 initrd_util=pkcs11:DISK:MY \
+        initrd_readers=openct initrd_devices=/dev/sda3 initrd_loopstart=5
 
 You should be prompted for the key password and boot should succeed.
 
@@ -215,8 +229,8 @@ Now we need to encrypt your swap partition.
 Create a new key for the swap partition as you have done for your root.
 
 Reboot with the following arguments:
-  root=/dev/loop5 initrd_util=gpgfile:/dev/sda1:/swap.gpg,/root.gpg initrd_devices=/dev/sda2,/dev/sda3
-        initrd_loopstart=4 resume=/dev/loop4
+  root=/dev/loop5 initrd_encmode=loop-aes:AES256 initrd_util=gpgfile:ext2:/dev/sda1:/swap.gpg,/root.gpg \
+        initrd_devices=/dev/sda2,/dev/sda3 initrd_loopstart=4 resume=/dev/loop4
 
 You should be prompted for the password to the gpg key and boot should succeed.
 
@@ -274,7 +288,7 @@ MENU TITLE Boot
 LABEL x86_64-3.1.0-gentoo-r1
 KERNEL kernel-x86_64-3.1.0-gentoo-r1
 INITRD initramfs-x86_64-3.1.0-gentoo-r1
-APPEND root=/dev/sda3 rootfstype=ext4 ro video=inteldrmfb:1920x1200-32@60 splash=silent,fadein,theme:livecd-2007.0 quiet console=tty1 initrd_suspend_mode=uswsusp resume=/dev/sda2 intel_iommu=off initrd_util=gpgfile:/dev/sda1:/swap.gpg,/root.gpg initrd_devices=/dev/sda2,/dev/sda3 initrd_loopstart=4
+APPEND root=/dev/sda3 rootfstype=ext4 ro video=inteldrmfb:1920x1200-32@60 splash=silent,fadein,theme:livecd-2007.0 quiet console=tty1 initrd_suspend_mode=uswsusp resume=/dev/sda2 intel_iommu=off initrd_encmode=loop-aes:AES256 initrd_util=gpgfile:ext2:/dev/sda1:/swap.gpg,/root.gpg initrd_devices=/dev/sda2,/dev/sda3 initrd_loopstart=4
 
 LABEL menu
 MENU HIDE
@@ -413,6 +427,7 @@ umount
 </pre>}}
 
 In case smartcards are used or plug&play is needed for USB storage, additions to genkernel default configuration:
+  CONFIG_FEATURE_DD_IBS_OBS # for initial encryption (notrunc)
   CONFIG_FEATURE_MDEV_CONF
   CONFIG_FEATURE_MDEV_EXEC
 
@@ -453,6 +468,7 @@ In case smartcards are used or plug&play is needed for USB storage, additions to
     | +--- aespipe
     | +--- gpg                       (Optional, no PKCS#11)
     | +--- gpg-agent                 (Optional, no PKCS#11, gnupg>=2.0)
+    | +--- aescrypt                  (Optional, no PKCS#11, aescrypt)
     | \--- pkcs11-data               (Optional, PKCS#11)
     +-+- lib
     | \--- readers                   (Optional, pcsc)
@@ -485,22 +501,21 @@ In case smartcards are used or plug&play is needed for USB storage, additions to
 #       initrd_encmode=<mode>
 #		<empty>
 #			No encryption.
-#		loop-aes
+#		loop-aes[:cipher]
 #			Enables loop-AES support.
 #		dm-crypt
 #			Enables DM-Crypt support.
 #	initrd_util
 #		pkcs11:application:label,label,label
 #			use PKCS#11 smartcards.
-#		gpgfile:device:fstype:file,file,file[:passphrase]
-#			use gnupg file located at device.
+#		gpgfile|aescrypt|keyfile:device:fstype:file,file,file[:passphrase]
+#			use gnupg or aes crypt file located at device.
 #			wait for device to be available.
+#			device can be 'none'
 #		passphrase:id,id,id			(dm-crypt)
 #			use passphrases read from the user, each
 #			id signify passphrase for a device, id
 #			may be the same.
-#		keyfile:device:fstype:file,file,file	(dm-crypt)
-#			use keyfile located at device.
 #	initrd_devices
 #		Devices for encryption setup.
 #	initrd_suspend_mode
@@ -555,6 +570,8 @@ In case smartcards are used or plug&play is needed for USB storage, additions to
 #
 # History
 # -----------------
+# 2012.10.10 - Alon Bar-Lev
+#	Added support for aescrypt as alternative of gpg
 # 2008.05.06 - Alon Bar-Lev
 #	Added initrd_readers= parameters.
 #	People who used smartcards need to add initrd_readers=pcscd
@@ -659,11 +676,11 @@ cfg_root_mode=ro		# Root mount mode (ro)
 cfg_root_type=			# Root filesystem type (rootfstype)
 cfg_resume_device=		# Resume device.
 cfg_hand_root_control=1		# Execute init from root device
-cfg_util_type=			# Type of utility (gpgfile,pkcs11,passphrase,keyfile) (initrd_util)
-cfg_remdev=			# Device assigned to removable media for gpgfile utility. (initrd_util=gpgfile)
-cfg_remdev_fs=			# Device assigned to removable media for gpgfile utility. (initrd_util=gpgfile)
-cfg_gpg_files=			# Files, one for each loop/device, comma separated (initrd_util=gpgfile)
-cfg_gpg_pass=			# Static passphrase (initrd_util=gpgfile)
+cfg_util_type=			# Type of utility (gpgfile,aescrypt,pkcs11,passphrase,keyfile) (initrd_util)
+cfg_remdev=			# Device assigned to removable media for gpgfile|aescrypt utility. (initrd_util=gpgfile|aescrypt)
+cfg_remdev_fs=			# Device assigned to removable media for gpgfile|aescrypt utility. (initrd_util=gpgfile|aescrypt)
+cfg_key_files=			# Files, one for each loop/device, comma separated (initrd_util=gpgfile|aescrypt)
+cfg_gpg_pass=			# Static passphrase (initrd_util=gpgfile|aescrypt)
 cfg_pkcs11_application=		# PKCS#11 data object application name (initrd_util=pkcs11)
 cfg_pkcs11_labels=		# PKCS#11 data object labels, one for each loop, (initrd_util=pkcs11)
 cfg_pkcs11_pass=	 	# PKCS#11 PIN (initrd_util=pkcs11)
@@ -848,9 +865,9 @@ f_reset_environment() {
 }
 
 f_mount_remdev() {
-	f_modprobe_group "remdev"
-	
 	f_shell_checkpoint 302
+	f_modprobe_group "remdev"
+
 	local first_time=1
 	while ! mount -n -o ro ${cfg_remdev_fs:+-t "${cfg_remdev_fs}"} "${cfg_remdev}" "${cfg_remmnt}" > /dev/null 2>&1; do
 		if [ ${first_time} != 0 ]; then
@@ -986,27 +1003,64 @@ f_keys_read_pkcs11() {
 	f_shell_checkpoint 105
 }
 
-f_keys_read_gpg() {
+f_keys_read_aescrypt() {
 
 	local index=0
 	local bad_pass=1
 	while [ ${bad_pass} != 0 ]; do
-		if [ -z "${cfg_gpg_pass}" ]; then
+		if [ -z "${cfg_pass}" ]; then
 			stty -echo
 			echo -n "Passphrase: "
-			read cfg_gpg_pass
+			read cfg_pass
 			echo
 			stty echo
 		fi
 		bad_pass=0
 
 		local file
-		for file in $(echo "${cfg_gpg_files}" | sed 's/,/ /g'); do
+		for file in $(echo "${cfg_key_files}" | sed 's/,/ /g'); do
 			if ! [ -f "${cfg_remmnt}/${file}" ]; then
 				f_die "Cannot access ${cfg_remdev}:${file}"
 			fi
 
-			if ! echo "${cfg_gpg_pass}" | \
+			if ! aescrypt -d -p "${cfg_pass}" \
+				-o "${cfg_tmp_keys_rep}/${index}.key" \
+				"${cfg_remmnt}/${file}"; then
+				bad_pass=1
+			else
+				index=$((${index}+1))
+			fi
+		done
+
+		unset cfg_pass
+
+		if [ ${bad_pass} != 0 ]; then
+			echo "Please try again." >&2
+		fi
+	done
+}
+
+f_keys_read_gpg() {
+
+	local index=0
+	local bad_pass=1
+	while [ ${bad_pass} != 0 ]; do
+		if [ -z "${cfg_pass}" ]; then
+			stty -echo
+			echo -n "Passphrase: "
+			read cfg_pass
+			echo
+			stty echo
+		fi
+		bad_pass=0
+
+		local file
+		for file in $(echo "${cfg_key_files}" | sed 's/,/ /g'); do
+			if ! [ -f "${cfg_remmnt}/${file}" ]; then
+				f_die "Cannot access ${cfg_remdev}:${file}"
+			fi
+
+			if ! echo "${cfg_pass}" | \
 				gpg --homedir / \
 					--batch \
 					--logger-file /dev/null \
@@ -1020,7 +1074,7 @@ f_keys_read_gpg() {
 			fi
 		done
 
-		unset cfg_gpg_pass
+		unset cfg_pass
 
 		if [ ${bad_pass} != 0 ]; then
 			echo "Please try again." >&2
@@ -1100,18 +1154,17 @@ f_keys_read() {
 		pkcs11)
 			f_keys_read_pkcs11
 		;;
-		gpgfile)
+		gpgfile|aescrypt|keyfile)
 			f_mount_remdev
-			f_keys_read_gpg
+			case "${cfg_util_type}" in
+				gpgfile) f_keys_read_gpg ;;
+				aescrypt) f_keys_read_aescrypt ;;
+				keyfile) f_keys_read_keyfile ;;
+			esac
 			f_umount_remdev
 		;;
 		passphrase)
 			f_keys_read_passphrase
-		;;
-		keyfile)
-			f_mount_remdev
-			f_keys_read_keyfile
-			f_umount_remdev
 		;;
 	esac
 
@@ -1277,7 +1330,7 @@ f_setup_environment() {
 						v=$(f_parse_remove_head "${v}" ":")
 						[ -n "${t}" ] && cfg_pkcs11_pass="${t}"
 					;;
-					gpgfile)
+					gpgfile|aescrypt|keyfile)
 						t=$(f_parse_head "${v}" ":")
 						v=$(f_parse_remove_head "${v}" ":")
 						[ -n "${t}" ] && cfg_remdev="${t}"
@@ -1286,7 +1339,7 @@ f_setup_environment() {
 						[ -n "${t}" ] && cfg_remdev_fs="${t}"
 						t=$(f_parse_head "${v}" ":")
 						v=$(f_parse_remove_head "${v}" ":")
-						[ -n "${t}" ] && cfg_gpg_files="${t}"
+						[ -n "${t}" ] && cfg_key_files="${t}"
 						t=$(f_parse_head "${v}" ":")
 						v=$(f_parse_remove_head "${v}" ":")
 						[ -n "${t}" ] && cfg_gpg_pass="${t}"
@@ -1295,17 +1348,6 @@ f_setup_environment() {
 						t=$(f_parse_head "${v}" ":")
 						v=$(f_parse_remove_head "${v}" ":")
 						[ -n "${t}" ] && cfg_passphrase_id="${t}"
-					;;
-					keyfile)
-						t=$(f_parse_head "${v}" ":")
-						v=$(f_parse_remove_head "${v}" ":")
-						[ -n "${t}" ] && cfg_remdev="${t}"
-						t=$(f_parse_head "${v}" ":")
-						v=$(f_parse_remove_head "${v}" ":")
-						[ -n "${t}" ] && cfg_remdev_fs="${t}"
-						t=$(f_parse_head "${v}" ":")
-						v=$(f_parse_remove_head "${v}" ":")
-						[ -n "${t}" ] && cfg_keyfile_files="${t}"
 					;;
 					*)
 						f_die "Error: Invalid util argument ${v}"
@@ -1336,8 +1378,12 @@ f_setup_environment() {
 			;;
 			initrd_encmode=*)
 				case "${v}" in
-					loopaes)	cfg_loopaes=1;;
 					loop-aes)	cfg_loopaes=1;;
+					loop-aes:*)
+						cfg_loopaes=1
+						local c="${v#*:}"
+						cfg_cipher="${c}"
+						;;
 					dmcrypt)	cfg_dmcrypt=1;;
 					dm-crypt)	cfg_dmcrypt=1;;
 				esac

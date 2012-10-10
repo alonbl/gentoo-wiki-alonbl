@@ -164,7 +164,7 @@ Device Drivers --->
 
 You have to install the corresponding firmware/microcode for your iwlwifi network device in order to become really useful as a wireless adapter.
 
-Here is a short (and not complete) overview about what the microcode does, taken from the file README.iwlwifi-3945-ucode that is shipped with the microcode package [http://gentoo-portage.com/Search?search=net-wireless/iwl3945-ucode iwl3945-ucode] from portage:
+Here is a short (and not complete) overview about what the microcode does, taken from the file README.iwlwifi-3945-ucode that is shipped with the microcode package [http://gentoo-portage.com/Search?search=sys-firmware/iwl3945-ucode iwl3945-ucode] from portage:
 
 {{Note| Quote: README.iwlwifi-3945-ucode
 
@@ -172,29 +172,27 @@ The file iwlwifi-3945.ucode provided in this package is required to be present o
 
 On adapter initialization, and at varying times during the uptime of the adapter, the microcode is loaded into the RAM on the network adapter. The microcode provides the low level MAC features including radio control and high precision timing events (backoff, transmit, etc.) while also providing varying levels of packet filtering which can be used to keep the host from having to handle packets that are not of interest given the current operating mode of the device.}}
 
-To install the microcode, simply emerge {{Package|net-wireless/iwl3945-ucode|direct=yes}}:
+To install the microcode, simply emerge {{Package|sys-firmware/iwl3945-ucode|direct=yes}}:
 
-{{Root|emerge -av net-wireless/iwl3945-ucode}}
+{{Root|emerge -av sys-firmware/iwl3945-ucode}}
 
-or, respectively {{Package|net-wireless/iwl4965-ucode|direct=yes}}:
+or, respectively {{Package|sys-firmware/iwl4965-ucode|direct=yes}}:
 
-{{Root|emerge -av net-wireless/iwl4965-ucode}}
+{{Root|emerge -av sys-firmware/iwl4965-ucode}}
 
-or, if you have a Intel Wifi Link 5100/5300 {{Package|net-wireless/iwl5000-ucode|direct=yes}}:
+or, if you have a Intel Wifi Link 5100/5300 {{Package|sys-firmware/iwl5000-ucode|direct=yes}}:
 
-{{Root|emerge -av net-wireless/iwl5000-ucode}}
+{{Root|emerge -av sys-firmware/iwl5000-ucode}}
 
-If you have a Intel Wifi Link 6000, then you need {{Package|net-wireless/iwl6000-ucode|direct=yes}} (see [http://bugs.gentoo.org/show_bug.cgi?id=304875]).
+If you have a Intel Wifi Link 6000, then you need {{Package|sys-firmware/iwl6000-ucode|direct=yes}} (see [http://bugs.gentoo.org/show_bug.cgi?id=304875]).
 
-{{Root|emerge -av net-wireless/iwl6000-ucode}}
+{{Root|emerge -av sys-firmware/iwl6000-ucode}}
 
 If the required microcode/firmware is not in portage yet, then the latest microcode/firmware can be obtained at [http://intellinuxwireless.org/?n=downloads].
 
 It is also recommended to check the README files of the microcode packages, as they contain other useful information for setting up the device. You can usually find them in /usr/share/doc/iwl3945-ucode-*/ or /usr/share/doc/iwl4965-ucode-*/ respectively, where * is to be replaced with the package version.
 
 For further configuration follow the [http://www.gentoo.org/doc/en/handbook/handbook-x86.xml?part=4&chap=4 Gentoo Handbook].
-
-
 
 === Networking ===
 
