@@ -88,7 +88,7 @@ app-crypt/gnupg static # optional if file based key is used
 app-crypt/aescrypt static # optional if file based key is used
 </pre>}}
 
-sys-apps/loop-aes-losetup is available via overlay at http://sites.google.com/site/alonbarlev/utilities.
+sys-apps/loop-aes-losetup is available via overlay at http://github.com/alonbl/alon-barlev-overlay.git
 
 {{Root|emerge sysfs/loop-aes app-crypt/aespipe sys-apps/loop-aes-losetup}}
 
@@ -299,7 +299,7 @@ KERNEL vesamenu.c32
 
 == Boot partition integrity ==
 
-sys-apps/boot-digest is available via overlay at http://sites.google.com/site/alonbarlev/utilities.
+sys-apps/boot-digest is available via overlay at http://github.com/alonbl/alon-barlev-overlay.git .
 
 Use boot-digest-mark utility in order to store the digest of the boot partition, so that you will be notified if it is changed. Configure your system to run boot-digest-check during your boot process.
 
@@ -1489,7 +1489,7 @@ Gentoo's genkernel is a wonderful tool that ease kernel compilation process. Thi
 * Support two versions of the same kernel (Debug and production), in order to not lock computer when invalid kernel is installed.
 * Don't install kernel symbol file in order to make it harder to reverse debug the bzImage. 
 
-app-misc/genkernel-utils is available via overlay at http://sites.google.com/site/alonbarlev/utilities.
+app-misc/genkernel-utils is available via overlay at http://github.com/alonbl/alon-barlev-overlay.git .
 
 Edit mygenkernel.conf and use mygenkernel to create your initramfs.
 
