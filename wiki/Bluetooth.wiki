@@ -72,6 +72,26 @@ You are now ready to proceed.
 
 {{Root|emerge net-wireless/bluedevil}}
 
+== Troubleshooting ==
+
+=== Find device ===
+hcitool dev should show your bluetooth devices.
+{{Root|hcitool dev}}
+
+lsusb will show your bluetooth devices if you have USB bluetooth device or laptop integrated device (in most cases).
+{{Root|lsusb}}
+    Bus 002 Device 005: ID 0930:0508 Toshiba Corp. Integrated Bluetooth HCI
+
+=== Toshiba laptops ===
+
+Some Toshiba laptops have switcher to enable/disable Wi-Fi and Bluetooth. In new version of kernel you have to enable the following option to make bluetooth working:
+
+{{Kernel||<pre>
+  [*] Device drivers  --->
+    [*]   X86 Platform Specific Device Drivers  --->
+      [*]   Toshiba Bluetooth RFKill switch support
+</pre>}}
+
 == Maintainer ==
 
 [[User:Alonbl|Alon Bar-Lev]]

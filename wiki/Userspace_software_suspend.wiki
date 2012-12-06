@@ -183,7 +183,7 @@ To suspend-to-RAM, run:
 
 === Troubleshooting ===
 
-If something goes wrong, first try suspend/resume without X11 running, must issues are video card related.
+If something goes wrong, first try suspend/resume without X11 running, most issues are video card related.
 
 Also try s2disk directly from text mode without hibernate script and see if it works.
 

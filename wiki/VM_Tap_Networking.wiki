@@ -39,15 +39,17 @@ network directly.
 Add:
 {{File|/etc/conf.d/net|<pre>
 tuntap_vm0="tap"
+rc_net_vm0_need="firewall"
 iproute2_vm0="group users"
 config_vm0="null"
 
 tuntap_vm1="tap"
+rc_net_vm1_need="firewall"
 iproute2_vm1="group users"
 config_vm1="null"
 
 rc_provide_vbr0="!net"
-rc_need_vbr0="firewall net.vm0 net.vm1" # firewall is optional
+rc_net_vbr0_need="firewall net.vm0 net.vm1" # firewall is optional
 bridge_vbr0="vm0 vm1"
 config_vbr0="192.168.151.1/24"
 brctl_vbr0="setfd 0

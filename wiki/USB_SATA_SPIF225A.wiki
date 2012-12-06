@@ -2,6 +2,24 @@
 
 {{Note|This device supports disks larger than 2.2T.}}
 
+{{Warning|DO NOT BUY THIS PRODUCT}}
+
+On some computers the device cannot be plugged-in, errors:
+ Nov 17 22:00:02 localhost kernel: usb 3-1.2: device descriptor read/64, error -32
+ Nov 17 22:00:02 localhost kernel: usb 3-1.2: device descriptor read/64, error -32
+ Nov 17 22:00:02 localhost kernel: usb 3-1.2: new full-speed USB device number 26 using ehci_hcd
+ Nov 17 22:00:02 localhost kernel: usb 3-1.2: device descriptor read/64, error -32
+ Nov 17 22:00:02 localhost kernel: usb 3-1.2: device descriptor read/64, error -32
+ Nov 17 22:00:02 localhost kernel: usb 3-1.2: new full-speed USB device number 27 using ehci_hcd
+ Nov 17 22:00:03 localhost kernel: usb 3-1.2: device not accepting address 27, error -32
+ Nov 17 22:00:03 localhost kernel: usb 3-1.2: new full-speed USB device number 28 using ehci_hcd
+ Nov 17 22:00:03 localhost kernel: usb 3-1.2: device not accepting address 28, error -32
+ Nov 17 22:00:03 localhost kernel: hub 3-1:1.0: unable to enumerate USB device on port 2
+ Nov 17 22:00:07 localhost kernel: ehci_hcd 0000:00:1a.0: power state changed by ACPI to D3cold
+ Nov 17 22:01:17 localhost kernel: ehci_hcd 0000:00:1a.0: power state changed by ACPI to D0
+
+Connecting via usb hub makes it work. As far as I investigated it relates to the current level the device pulls.
+
 == Device ==
 
 [[File:USB_SATA_SPIF225A.jpg|200px]]

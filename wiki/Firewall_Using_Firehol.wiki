@@ -47,7 +47,7 @@ net.ipv4.conf.default.secure_redirects = 0
 
 For each interface add:
 {{File|/etc/conf.d/net|<pre>
-rc_need_eth0="firewall"
+rc_net_eth0_need="firewall"
 </pre>}}
 
 === Reload ===

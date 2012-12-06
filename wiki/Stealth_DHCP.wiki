@@ -15,7 +15,7 @@ preup() {
         return 0
 }
 
-rc_need_eth0="firewall"     # optional, if you have firewall
+rc_net_eth0_need="firewall"     # optional, if you have firewall
 dhcp_eth0="release nontp nonis nosendhost"
 dhcpcd_eth0="-h ${my_name} -I ${my_name}"
 mac_eth0="random-samekind"

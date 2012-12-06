@@ -22,7 +22,8 @@ We hope you will find this information useful.
 * uswsusp from http://suspend.sf.net optional: needed for suspending.
 * TuxOnIce from http://www.tuxonice.net optional:needed for suspending.
 * suspend2-userui from http://www.tuxonice.net optional: needed for suspend/resume status report in tuxonice configuration.
-* gpg from http://www.gnupg.org/ optional: needed to handle file based keys. 
+* aescrypt from http://www.aescrypt.com/ optional: need to handle file based keys.
+* gpg from http://www.gnupg.org/ optional: needed to handle file based keys.
 
 == Prerequisites ==
 
@@ -35,7 +36,7 @@ Knowledge of all of these is easy to obtain with the help of Google and the docu
 * Make sure you have a working TuxOnIce or uswsusp environment.
 * Make sure you have a working loop-aes environment, test loop on files.
 * Generate keys to be used to encrypt your disk.
-* Compile gpg, losetup, aespipe as static.
+* Compile aescrypt/gpg, losetup, aespipe as static.
 * You have a backup of all data on your system. If something breaks you could easily lose the entire partition.
 
 {{Warning|No really, back up your data.}}
@@ -59,7 +60,7 @@ In order to have a secure encrypted and suspendable environment, you will need t
 
 {{Note|We recommend using Loop-AES in Multi-key-v3 mode.}}
 
-There are a number of ways to store the decryption keys and we try to accommodate them all. A key may be kept on a PKCS#11 cryptographic token, in a keyfile encrypted to your gpg public key, or in a keyfile encrypted with symmetric encryption. If you do not have a smartcard, you can store a keyfile on external media such as a cd-rom or usb thumb drive. Please refer to the Loop-AES documentation for instructions on generating keys and a security analysis. Because symmetric encryption is heavily dependent on the strength of the passphrase used, http://www.diceware.com is suggested for generating strong passphrases.
+There are a number of ways to store the decryption keys and we try to accommodate them all. A key may be kept on a PKCS#11 cryptographic token, in a keyfile encrypted with symmetric encryption. If you do not have a smartcard, you can store a keyfile on external media such as a cd-rom or usb thumb drive. Please refer to the Loop-AES documentation for instructions on generating keys and a security analysis. Because symmetric encryption is heavily dependent on the strength of the passphrase used, http://www.diceware.com is suggested for generating strong passphrases.
 
 == Beginning the Process ==
 
@@ -84,8 +85,8 @@ Add:
 sys-apps/loop-aes-losetup static
 app-crypt/aespipe static
 sys-fs/loop-aes keyscrub
-app-crypt/gnupg static # optional if file based key is used
 app-crypt/aescrypt static # optional if file based key is used
+app-crypt/gnupg static # optional if file based key is used
 </pre>}}
 
 sys-apps/loop-aes-losetup is available via overlay at http://github.com/alonbl/alon-barlev-overlay.git
@@ -108,7 +109,9 @@ The linuxrc script accepts the following additional kernel parameters:
 * initrd_util
 :* pkcs11:application:label,label,label
 ::use PKCS#11 smartcards. 
-:* gpgfile:device:file,file,file<br>
+:* aescrypt:device:fstype:file,file,file<br>
+::use aescrypt files located at device. wait for device to be available. 
+:* gpgfile:device:fstype:file,file,file<br>
 ::use gnupg files located at device. wait for device to be available. 
 * initrd_devices=/dev/sdXN,/dev/sdYM,...
 :devices to loop over. 
@@ -120,11 +123,11 @@ The linuxrc script accepts the following additional kernel parameters:
 If no initrd_* parameter is specify, the initramfs will perform regular boot with no encryption support.
 
 Example:
- initrd_util=gpgfile:/dev/sda1:/swap.gpg,/root.gpg initrd_devices=/dev/sda2,/dev/sda3 initrd_loopstart=4
+ initrd_util=aescrypt:/dev/sda1:ext2:/swap.key,/root.key initrd_devices=/dev/sda2,/dev/sda3 initrd_loopstart=4
 
 This will load utilities from /dev/sda1 and map:
-* /dev/loop4->/dev/sda2 with key from /swap.gpg
-* /dev/loop5->/dev/sda3 with key from /root.gpg 
+* /dev/loop4->/dev/sda2 with key from /swap.key
+* /dev/loop5->/dev/sda3 with key from /root.key
 
 === Create Encryption Keys ===
 
@@ -132,7 +135,7 @@ This will load utilities from /dev/sda1 and map:
 
 Run the following command:
 {{Root|<nowiki>head -c 2925 /dev/random | uuencode -m - | head -n 66 | tail -n 65 |
-        gpg --symmetric -a >/boot/root.gpg</nowiki>}}
+        aescrypt -e -o /boot/root.key /proc/self/fd/0</nowiki>}}
 
 ==== Using PKCS#11 cryptographic token ====
 
@@ -169,6 +172,19 @@ You should get a shell after the initramfs has setup itself correctly but before
 
 This next step goes over all of /dev/sda3 (root partition) and encrypts it. Be sure that Loop-AES is functioning in your kernel, you have created the encryption keys and the encryption keys are available on the partition passed as initrd_util. If any of the above are not true it either will not work or you will lose all your data.
 
+==== Encryption using aescrypt ====
+
+Run the following command:
+
+{{Root|mkdir /mnt}}
+{{Root|<nowiki>mount -o ro /dev/sda1 /mnt</nowiki>}}
+{{Root|aescrypt -d -o /tmp/key1 /mnt/key1.key}}
+{{Root|<nowiki>dd if=/dev/sda3 bs=64k | \
+        aespipe -e AES256 -p 8 8< /tmp/key1 | \
+        dd of=/dev/sda3 bs=64k conv=notrunc</nowiki>}}
+{{Root|<nowiki>dd if=/dev/zero of=/tmp/key1 count=10000 conv=notrunc</nowiki>}}
+{{Root|rm /tmp/key1}}
+
 ==== Encryption using gpg key ====
 
 Run the following command:
@@ -178,19 +194,6 @@ Run the following command:
 {{Root|<nowiki>dd if=/dev/sda3 bs=64k | \
         aespipe -G / -K /mnt/root.gpg -e AES256 | \
         dd of=/dev/sda3 bs=64k conv=notrunc</nowiki>}}
-
-==== Encryption using aescrypt ====
-
-Run the following command:
-
-{{Root|mkdir /mnt}}
-{{Root|<nowiki>mount -o ro /dev/sda1 /mnt</nowiki>}}
-{{Root|aescrypt -o /tmp/key1 /mnt/key1.aes}}
-{{Root|<nowiki>dd if=/dev/sda3 bs=64k | \
-        aespipe -e AES256 -p 8 8< /tmp/key1 | \
-        dd of=/dev/sda3 bs=64k conv=notrunc</nowiki>}}
-{{Root|<nowiki>dd if=/dev/zero of=/tmp/key1 count=10000 conv=notrunc</nowiki>}}
-{{Root|rm /tmp/key1}}
 
 ==== Encryption using PKCS#11 cryptographic token ====
 
@@ -212,8 +215,8 @@ Now perform the actual encryption, don't be alarmed that the key is exported to 
 
 === First success boot ===
 
-If you use gpg key, reboot using the following arguments:
- root=/dev/loop5 initrd_encmode=loop-aes:AES256 initrd_util=gpgfile:/dev/sda1:ext2:/root.gpg \
+If you use aescrypt key, reboot using the following arguments:
+ root=/dev/loop5 initrd_encmode=loop-aes:AES256 initrd_util=aescrypt:/dev/sda1:ext2:/root.key \
         initrd_devices=/dev/sda3 initrd_loopstart=5
 
 If you use PKCS#11 cryptographic token, reboot using the following arguments:
@@ -229,7 +232,7 @@ Now we need to encrypt your swap partition.
 Create a new key for the swap partition as you have done for your root.
 
 Reboot with the following arguments:
-  root=/dev/loop5 initrd_encmode=loop-aes:AES256 initrd_util=gpgfile:ext2:/dev/sda1:/swap.gpg,/root.gpg \
+  root=/dev/loop5 initrd_encmode=loop-aes:AES256 initrd_util=gpgfile:/dev/sda1:ext2:/swap.gpg,/root.gpg \
         initrd_devices=/dev/sda2,/dev/sda3 initrd_loopstart=4 resume=/dev/loop4
 
 You should be prompted for the password to the gpg key and boot should succeed.

@@ -19,7 +19,7 @@ Configure system to run ppp, see [[PPP_Client|how to configure ppp client]].
 
 Provided eth0 should be used for connection, add:
 {{File|/etc/conf.d/net|<pre>
-rc_need_ppp1="firewall net.eth0" # firewall is optional
+rc_net_ppp1_need="firewall net.eth0" # firewall is optional
 config_ppp1="ppp"
 plugins_ppp1="pppoe"
 link_ppp1="eth0"

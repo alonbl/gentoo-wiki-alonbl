@@ -144,15 +144,15 @@ router vpn_nat inface eth0 outface vpn0
 dns_domain="mydomain.com"
 dns_search="mydomain.com"
 
-rc_need_eth0="firewall"
+rc_net_eth0_need="firewall"
 config_eth0="10.10.50.253/21"
 dns_servers_eth0="10.10.50.2 10.10.50.39"
 
-rc_need_eth1="firewall"
+rc_net_eth1_need="firewall"
 config_eth1="192.168.253.253/24"
 routes_eth1="default via 192.168.253.254"
 
-rc_need_vpn0="firewall"
+rc_vpn0_need="firewall"
 rc_provide_vpn0="!net"
 tuntap_vpn0="tun"
 config_vpn0="null"

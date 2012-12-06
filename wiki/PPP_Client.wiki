@@ -31,7 +31,7 @@ modules="${modules} ppp-generic"
 
 Add:
 {{File|/etc/conf.d/net|<pre>
-rc_need_ppp0="firewall"  # optional, if you are using firewall
+rc_net_ppp0_need="firewall"  # optional, if you are using firewall
 config_ppp0="ppp"
 link_ppp0="/dev/ttyUSB2" # set your device
 username_ppp0=''         # set your username

@@ -133,12 +133,12 @@ And follow [[User:Alonbl/Thinkpad_Common]].
 
 {{File|/etc/conf.d/net|<pre>
 modules="wpa_supplicant"
-rc_need_wlan0="firewall"    # if you are using firewall
+rc_net_wlan0_need="firewall"    # if you are using firewall
 config_wlan0="dhcp"
 wpa_cli_wlan0="-G3600"      # this saves power
 wpa_supplicant_wlan0="-D nl80211"
 
-rc_need_eth0="firewall"    # if you are using firewall
+rc_net_eth0_need="firewall"    # if you are using firewall
 config_eth0="dhcp"
 </pre>}}
 

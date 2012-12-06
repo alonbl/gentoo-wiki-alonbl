@@ -35,7 +35,7 @@ Then it should be converted to:
 
 Add:
 {{File|/etc/conf.d/net|<pre>
-rc_need_ppp2="firewall"           # optional, if you have firewall
+rc_net_ppp2_need="firewall"           # optional, if you have firewall
 config_ppp2="ppp"
 link_ppp2="/dev/ttyUSB4"
 pppd_ppp2="noauth defaultroute usepeerdns lock mru 296 mtu 296"
