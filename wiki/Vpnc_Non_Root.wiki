@@ -24,7 +24,7 @@ It is very recommended to configure firewall on your computer, see [[Firewall_Us
 Add:
 {{File|/etc/conf.d/net|<pre>
 rc_net_vpn0_need="firewall" # optional, if you setup firewall.
-rc_provide_vpn0="!net"
+rc_net_vpn0_provide="!net"
 tuntap_vpn0="tun"
 iproute2_vpn0="group users"
 config_vpn0="null"

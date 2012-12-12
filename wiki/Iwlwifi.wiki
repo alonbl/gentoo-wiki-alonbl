@@ -354,6 +354,8 @@ If you are sure that you have the correct microcode installed, it could be that 
 
 If everything is going well (there are no errors in the syslog see below) but there is always a timeout during authentication, then your access point might has MAC-based access control enabled. Check your access point whether MAC-based access control is enabled and add your WLAN interface's MAC address to this list. Afterwards, a successful authentication should be possible.
 
+If your notebook is sometimes able to connect and other times not and you use WEP 40/128-bit for security. Take a look what you choosed for authentication. There are two modes "open system" and "shared key". After I changed to "open system" the problem was solved.
+
 {{File|/var/log/syslog|<pre>
 ...
 wlan0: deauthenticating from 00:ef:dd:cc:bb:aa by local choice (reason=3)

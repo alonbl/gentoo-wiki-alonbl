@@ -48,7 +48,7 @@ rc_net_vm1_need="firewall"
 iproute2_vm1="group users"
 config_vm1="null"
 
-rc_provide_vbr0="!net"
+rc_net_vbr0_provide="!net"
 rc_net_vbr0_need="firewall net.vm0 net.vm1" # firewall is optional
 bridge_vbr0="vm0 vm1"
 config_vbr0="192.168.151.1/24"
