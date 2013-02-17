@@ -53,7 +53,7 @@ rc_net_vbr0_need="firewall net.vm0 net.vm1" # firewall is optional
 bridge_vbr0="vm0 vm1"
 config_vbr0="192.168.151.1/24"
 brctl_vbr0="setfd 0
-sethello 0
+sethello 1
 stp off"
 </pre>}}
 
@@ -106,10 +106,10 @@ DNSMASQ_OPTS="--strict-order"
 == qemu settings ==
 
 Arguments:
-  -net nic -net tap,ifname=vm0,script=/bin/true
+  -net nic,netdev=eth0 -netdev tap,id=eth0,ifname=vm0,script=/bin/true
 
 KVM Arguments:
-  -net nic -net tap,ifname=vm0,script=/bin/true,vhost=on
+  -net nic,netdev=eth0,model=virtio -netdev tap,id=eth0,ifname=vm0,script=/bin/true,vhost=on
 
 == Maintainer ==
 

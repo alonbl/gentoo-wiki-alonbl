@@ -16,7 +16,7 @@
 
 == About ==
 
-I am using Gentoo since 2005, was a Gentoo developer (alonbl@gentoo.org) 2006-2008.
+I am using Gentoo since 2005, was a Gentoo developer (alonbl@gentoo.org) 2006-2008, returned at 2012.
 
 Gentoo has a great technology, compiling all from sources, optimized to specific target, optimized to specific configuration, without unneeded components, decent support of cross compilers, an init.d layout with dependencies and extensibility and flexible network configuration. I could not and still cannot find better environment for my infrastructure. Had I invented distribution, it was much like Gentoo.
 

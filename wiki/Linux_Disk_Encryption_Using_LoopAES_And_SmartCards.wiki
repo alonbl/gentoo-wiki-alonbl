@@ -22,8 +22,8 @@ We hope you will find this information useful.
 * uswsusp from http://suspend.sf.net optional: needed for suspending.
 * TuxOnIce from http://www.tuxonice.net optional:needed for suspending.
 * suspend2-userui from http://www.tuxonice.net optional: needed for suspend/resume status report in tuxonice configuration.
-* aescrypt from http://www.aescrypt.com/ optional: need to handle file based keys.
-* gpg from http://www.gnupg.org/ optional: needed to handle file based keys.
+* aescrypt from http://www.aescrypt.com/ optional: need to handle file based keys by aescrypt.
+* gpg from http://www.gnupg.org/ optional: needed to handle file based keys by gnupg.
 
 == Prerequisites ==
 
@@ -85,8 +85,8 @@ Add:
 sys-apps/loop-aes-losetup static
 app-crypt/aespipe static
 sys-fs/loop-aes keyscrub
-app-crypt/aescrypt static # optional if file based key is used
-app-crypt/gnupg static # optional if file based key is used
+app-crypt/aescrypt static # optional if file based key by aescrypt is used
+app-crypt/gnupg static # optional if file based key by gnupg is used
 </pre>}}
 
 sys-apps/loop-aes-losetup is available via overlay at http://github.com/alonbl/alon-barlev-overlay.git
@@ -135,7 +135,7 @@ This will load utilities from /dev/sda1 and map:
 
 Run the following command:
 {{Root|<nowiki>head -c 2925 /dev/random | uuencode -m - | head -n 66 | tail -n 65 |
-        aescrypt -e -o /boot/root.key /proc/self/fd/0</nowiki>}}
+        aescrypt -e -o /boot/root.key -</nowiki>}}
 
 ==== Using PKCS#11 cryptographic token ====
 
