@@ -1,7 +1,7 @@
 <mediawiki xmlns="http://www.mediawiki.org/xml/export-0.4/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mediawiki.org/xml/export-0.4/ http://www.mediawiki.org/xml/export-0.4.xsd" version="0.4" xml:lang="en">
   <siteinfo>
     <sitename>MySite</sitename>
-    <base>http://alonbl.wikinet.org/wiki/Main_Page</base>
+    <base>http://alonbl.wikinet.org/wiki/Alon_Bar-Lev%27s_Site</base>
     <generator>MediaWiki 1.16.5</generator>
     <case>first-letter</case>
     <namespaces>

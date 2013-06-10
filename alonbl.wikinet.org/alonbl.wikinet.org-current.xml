@@ -1,7 +1,7 @@
 <mediawiki xmlns="http://www.mediawiki.org/xml/export-0.4/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mediawiki.org/xml/export-0.4/ http://www.mediawiki.org/xml/export-0.4.xsd" version="0.4" xml:lang="en">
   <siteinfo>
     <sitename>MySite</sitename>
-    <base>http://alonbl.wikinet.org/wiki/Main_Page</base>
+    <base>http://alonbl.wikinet.org/wiki/Alon_Bar-Lev%27s_Site</base>
     <generator>MediaWiki 1.16.5</generator>
     <case>first-letter</case>
     <namespaces>
@@ -28,13 +28,29 @@
   <page>
     <title>Main Page</title>
     <id>1</id>
+    <redirect />
     <revision>
-      <id>254</id>
-      <timestamp>2013-06-05T21:12:43Z</timestamp>
+      <id>264</id>
+      <timestamp>2013-06-07T22:19:47Z</timestamp>
       <contributor>
         <username>Alonbl</username>
         <id>1</id>
       </contributor>
+      <comment>Redirected page to [[Alon Bar-Lev's Site]]</comment>
+      <text xml:space="preserve">#REDIRECT [[Alon_Bar-Lev's_Site]]</text>
+    </revision>
+  </page>
+  <page>
+    <title>Alon Bar-Lev's Site</title>
+    <id>148</id>
+    <revision>
+      <id>262</id>
+      <timestamp>2013-06-07T22:18:25Z</timestamp>
+      <contributor>
+        <username>Alonbl</username>
+        <id>1</id>
+      </contributor>
+      <comment>Created page with &quot;= Welcome to Alon Bar-Lev's Site =  * [[User:Alonbl]] * [[Gentoo]]&quot;</comment>
       <text xml:space="preserve">= Welcome to Alon Bar-Lev's Site =
 
 * [[User:Alonbl]]
@@ -142,6 +158,20 @@
         <username>Alonbl</username>
         <id>1</id>
       </contributor>
+      <text xml:space="preserve" />
+    </revision>
+  </page>
+  <page>
+    <title>File:Oak2.jpg</title>
+    <id>146</id>
+    <revision>
+      <id>259</id>
+      <timestamp>2013-06-07T22:08:42Z</timestamp>
+      <contributor>
+        <username>Alonbl</username>
+        <id>1</id>
+      </contributor>
+      <comment>uploaded a new version of &amp;quot;[[File:Oak2.jpg]]&amp;quot;</comment>
       <text xml:space="preserve" />
     </revision>
   </page>
@@ -8698,17 +8728,42 @@ TIMEOUT 5
   <page>
     <title>Main Page</title>
     <id>1</id>
+    <redirect />
     <revision>
-      <id>254</id>
-      <timestamp>2013-06-05T21:12:43Z</timestamp>
+      <id>264</id>
+      <timestamp>2013-06-07T22:19:47Z</timestamp>
       <contributor>
         <username>Alonbl</username>
         <id>1</id>
       </contributor>
-      <text xml:space="preserve">= Welcome to Alon Bar-Lev's Site =
-
-* [[User:Alonbl]]
-* [[Gentoo]]</text>
+      <comment>Redirected page to [[Alon Bar-Lev's Site]]</comment>
+      <text xml:space="preserve">#REDIRECT [[Alon_Bar-Lev's_Site]]</text>
+    </revision>
+  </page>
+  <page>
+    <title>MediaWiki:Mainpage</title>
+    <id>147</id>
+    <revision>
+      <id>261</id>
+      <timestamp>2013-06-07T22:17:28Z</timestamp>
+      <contributor>
+        <username>Alonbl</username>
+        <id>1</id>
+      </contributor>
+      <text xml:space="preserve">Alon Bar-Lev's Site</text>
+    </revision>
+  </page>
+  <page>
+    <title>MediaWiki:Sidebar-logo</title>
+    <id>145</id>
+    <revision>
+      <id>267</id>
+      <timestamp>2013-06-10T06:04:04Z</timestamp>
+      <contributor>
+        <username>Alonbl</username>
+        <id>1</id>
+      </contributor>
+      <text xml:space="preserve">http://alonbl.wikinet.org/w/images/alonbl/uploads/1/16/Alonbl.jpg</text>
     </revision>
   </page>
   <page>
@@ -9507,6 +9562,20 @@ Will produce:
 
 {{Note|Feel free to contact me regarding any of the subjects of my articles!}}
 {{Note|I will appreciate that before making none-trivial changes in my articles, discuss the change first}}</text>
+    </revision>
+  </page>
+  <page>
+    <title>User:BessieDub</title>
+    <id>149</id>
+    <revision>
+      <id>265</id>
+      <timestamp>2013-06-08T07:15:20Z</timestamp>
+      <contributor>
+        <username>BessieDub</username>
+        <id>2</id>
+      </contributor>
+      <comment>Created page with &quot;Im pleased to be at this website, good day people my name is Bessie Dubois I am within Great Britain&lt;br&gt;&lt;br&gt;my website :: [http://www.cenalessemagrecedor.org/ cenaless emagrece]&quot;</comment>
+      <text xml:space="preserve">Im pleased to be at this website, good day people my name is Bessie Dubois I am within Great Britain&lt;br&gt;&lt;br&gt;my website :: [http://www.cenalessemagrecedor.org/ cenaless emagrece]</text>
     </revision>
   </page>
 </mediawiki>

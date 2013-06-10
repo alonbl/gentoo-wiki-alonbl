@@ -18,11 +18,11 @@ S'all'
 p9
 asS'date'
 p10
-S'20130606'
+S'20130610'
 p11
 sS'path'
 p12
-S'./alonbl.wikinet.org'
+S'./alonblwikinetorg_w-20130610-wikidump'
 p13
 sS'xml'
 p14
